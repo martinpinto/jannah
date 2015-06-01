@@ -12,7 +12,8 @@ var acquire = require('acquire'),
   sugar = require('sugar'),
   timers = require('timers'),
   utilities = acquire('utilities'),
-  winston = require('winston');
+  winston = require('winston'),
+  os = require('os');
 
 var PHANTOM_COMMAND = "phantomjs",
   SLIMER_COMMAND = "submodules/slimerjs/src/slimerjs";
