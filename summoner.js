@@ -17,7 +17,11 @@ var acquire = require('acquire'),
 var PHANTOM_COMMAND = "phantomjs",
   SLIMER_COMMAND = "submodules/slimerjs/src/slimerjs";
 
-// TODO 
+if(os.platform().indexOf('win') === 0){
+  SLIMER_COMMAND = "submodules\\slimerjs\\src\\slimerjs.bat";
+}
+
+// TODO
 // Summoner should be moved to his own file.
 var Summoner = module.exports = function (engine, ip, port, callback) {
   this.init(engine, ip, port, callback);
