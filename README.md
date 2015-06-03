@@ -92,15 +92,15 @@ We provide a very simple API:
 
 ## Install
 
-1) Clone this project (or your own fork of it, if you want to create pull requests)
-2) Before you run it, open a terminal window and go to the folder this project is in. Run the command “git submodule update —init —recursive” to pull the slimerjs dependency 
-3) Now run “npm install” to get the required Node.js modules
+1. Clone this project (or your own fork of it, if you want to create pull requests)
+2. Before you run it, open a terminal window and go to the folder this project is in. Run the command “git submodule update —init —recursive” to pull the slimerjs dependency 
+3. Now run “npm install” to get the required Node.js modules
 
 ## Local use
 
 SlimerJS can use an environment variable to determine the exact Firefox binary to use. You may want to set SLIMERJS_LAUNCHER and point to a specific Firefox.exe or xulrunner instance. If SlimerJS fails to find Firefox automatically on your system, you *must* set this variable before you'll be able to run the next commands.
 
-1) Run ```node god.js debug```
-2) Open a new terminal window, run ```node seraph.js debug```.
+1. Run ```node god.js debug```
+2. Open a new terminal window, run ```node seraph.js debug```.
 
 You can now run (from a third terminal window) code that sends commands to the server. See scripts in the https://github.com/Asynchq/jannah/tree/master/examples folder for examples.
