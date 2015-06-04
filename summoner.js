@@ -38,29 +38,29 @@ Summoner.prototype.init = function (engine, ip, port, callback) {
   self._ip = ip;
   self._port = port;
   self._callback = callback;
-  self._angel = null;
+  self._tab = null;
   self._date = Date.create('today');
-  console.log("Summoning Angel");
+  console.log("Summoning Tab");
   if (engine === 'webkit')
-    self._angel = spawn(PHANTOM_COMMAND, ["angel.js", ip, port]);
+    self._tab = spawn(PHANTOM_COMMAND, ["tab.js", ip, port]);
   else
-    self._angel = spawn(SLIMER_COMMAND, ["angel.js", ip, port]);
+    self._tab = spawn(SLIMER_COMMAND, ["tab.js", ip, port]);
 
   self._noSpawnTimer = timers.setTimeout(function () {
     self._onNoSpawn();
   }, 10000);
-  self._angel.stdout.on('data', function (data) {
+  self._tab.stdout.on('data', function (data) {
     console.log('stdout: ' + data);
   });
-  self._angel.stderr.on('data', function (data) {
+  self._tab.stderr.on('data', function (data) {
     console.log('stderr: ' + data);
   });
 };
 
 Summoner.prototype._kill = function () {
   var self = this;
-  console.log("killing angel on port " + self.id);
-  self._angel.kill();
+  console.log("killing tab on port " + self.id);
+  self._tab.kill();
   self.emit('exit');
 };
 
@@ -83,7 +83,7 @@ Summoner.prototype._onNoSpawn = function () {
 Summoner.prototype._monitor = function () {
   var self = this;
   timers.clearTimeout(self._noSpawnTimer);
-  console.log("Angel: " + self.id + " is alive.");
+  console.log("Tab: " + self.id + " is alive.");
   var uri = "http://" + self._ip + ":" + self.id + "/ping";
   console.log(uri);
   var request = http.get(uri, function () {

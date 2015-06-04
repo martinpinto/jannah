@@ -21,8 +21,8 @@ var acquire = require('acquire'),
   winston = require('winston'),
   osm = require("os-monitor");
 
-var Seraph = module.exports = function (args) {
-  this._angels = {};
+var Hub = module.exports = function (args) {
+  this._tabs = {};
   this._debug = false;
 
   if (args[2]) {
@@ -32,13 +32,13 @@ var Seraph = module.exports = function (args) {
   this._backChannel = null;
   this._health = {};
   this._ip = "";
-  this._maxAngels = 0;
-  this._reserverdPorts = [];
+  this._maxTabs = 0;
+  this._reservedPorts = [];
   this._location = {};
   this.init();
 };
 
-Seraph.prototype.init = function () {
+Hub.prototype.init = function () {
   var self = this;
 
   var app = express();
@@ -50,27 +50,27 @@ Seraph.prototype.init = function () {
   app.all('*', function (req, res) {
     self._handleRequest(req, res);
   });
-  app.listen(config.SERAPH_PORT);
-  console.log("Initializing Seraph");
+  app.listen(config.HUB_PORT);
+  console.log("Initializing Hub");
   self._openBackChannel(function (err) {
     if (err) console.log(err);
   });
 };
 
-Seraph.prototype._exit = function (err) {
+Hub.prototype._exit = function (err) {
   var self = this;
   if (err)
-    console.warn('Seraph is going down because of an error ' + err);
+    console.warn('Hub is going down because of an error ' + err);
   else
-    console.log('Seraph exited cleanly ...');
+    console.log('Hub exited cleanly ...');
   self._backChannel.emit('disconnect', err);
 };
 
-Seraph.prototype._openBackChannel = function (done) {
+Hub.prototype._openBackChannel = function (done) {
   var self = this;
-  var seraph = require(config.SERAPH_CONFIG_PATH);
-  self._maxAngels = seraph.maxAngels;
-  self._location = seraph.location;
+  var hub = require(config.HUB_CONFIG_PATH);
+  self._maxTabs = hub.maxTabs;
+  self._location = hub.location;
   new Seq()
     .seq(function () {
       if (self._debug !== true)
@@ -85,19 +85,19 @@ Seraph.prototype._openBackChannel = function (done) {
       self._monitorHealth(this);
     })
     .seq(function () {
-      self._talkToGod(this);
+      self._talkToMaster(this);
     })
     .seq(function () {
-      console.log("Seraph up and going");
+      console.log("Hub up and going");
     })
     .catch(function (err) {
       done(err);
     });
 };
 
-Seraph.prototype._monitorHealth = function (done) {
+Hub.prototype._monitorHealth = function (done) {
   var self = this;
-  console.log("Checking node health");
+  console.log("Checking hub health");
   osm.start();
   osm.on('monitor', function (event) {
     self._health = Object.reject(event, "type");
@@ -105,16 +105,16 @@ Seraph.prototype._monitorHealth = function (done) {
   done();
 };
 
-Seraph.prototype._talkToGod = function (done) {
+Hub.prototype._talkToMaster = function (done) {
   var self = this;
   console.log("Registering with Hub");
-  // Establish the back channel to God !
+  // Establish the back channel to Master !
   var socketOptions = {
     transports: ['websocket']
   };
 
-  var godIp = self._debug ? "127.0.0.1" : config.GOD_ADDRESS;
-  self._backChannel = io.connect('http://' + godIp + ':' + config.GOD_BACK_CHANNEL_PORT,
+  var masterIp = self._debug ? "127.0.0.1" : config.MASTER_ADDRESS;
+  self._backChannel = io.connect('http://' + masterIp + ':' + config.MASTER_BACK_CHANNEL_PORT,
     socketOptions);
 
   self._backChannel.on('connect_error', function (err) {
@@ -124,25 +124,25 @@ Seraph.prototype._talkToGod = function (done) {
 
   self._backChannel.on('connect', function () {
     console.log('BackChannel open and ready for use');
-    // Every minute send an health update to God.
-    self._sendUpdateToGod.bind(self);
+    // Every minute send an health update to Master.
+    self._sendUpdateToMaster.bind(self);
     var tenSeconds = 10 * 1000;
-    setInterval(self._sendUpdateToGod.bind(self), tenSeconds);
+    setInterval(self._sendUpdateToMaster.bind(self), tenSeconds);
   });
 };
 
-Seraph.prototype._sendUpdateToGod = function () {
+Hub.prototype._sendUpdateToMaster = function () {
   var self = this;
-  self._backChannel.emit('seraphUpdate', {
+  self._backChannel.emit('HubUpdate', {
     health: self._health,
     ip: self._ip,
-    activeAngels: Object.size(self._angels),
-    maxAngels: self._maxAngels,
+    activeTabs: Object.size(self._tabs),
+    maxTabs: self._maxTabs,
     location: self._location
   });
 };
 
-Seraph.prototype._new = function (data, callback) {
+Hub.prototype._new = function (data, callback) {
   var self = this;
   var func = function (port) {
     console.log("GOT FREE PORT", port);
@@ -153,32 +153,32 @@ Seraph.prototype._new = function (data, callback) {
 
     var onExit = function () {
       console.log("Purging :" + port);
-      self._angels[port].removeAllListeners(['exit']);
-      delete self._angels[port];
-      self._reserverdPorts.splice(self._reserverdPorts.indexOf(self.id), 1);
-      self._sendUpdateToGod();
+      self._tabs[port].removeAllListeners(['exit']);
+      delete self._tabs[port];
+      self._reservedPorts.splice(self._reservedPorts.indexOf(self.id), 1);
+      self._sendUpdateToMaster();
     };
 
-    self._reserverdPorts.push(port);
+    self._reservedPorts.push(port);
     var ip = self._debug ? "127.0.0.1" : self._ip;
 
-    self._angels[port] = new Summoner(data.engine, ip, port, callback);
-    self._angels[port].on('exit', onExit);
-    // fire off a new update now that we have a new angel 
-    self._sendUpdateToGod();
+    self._tabs[port] = new Summoner(data.engine, ip, port, callback);
+    self._tabs[port].on('exit', onExit);
+    // fire off a new update now that we have a new Tab 
+    self._sendUpdateToMaster();
   };
-  utilities.getFreePort(self._reserverdPorts, func);
+  utilities.getFreePort(self._reservedPorts, func);
 };
 
-Seraph.prototype._announceAngel = function (data, callback) {
+Hub.prototype._announceTab = function (data, callback) {
   var self = this;
   var port = data.port;
   console.log(data.port);
-  self._angels[port].release();
+  self._tabs[port].release();
   callback({});
 };
 
-Seraph.prototype._handleRequest = function (req, res) {
+Hub.prototype._handleRequest = function (req, res) {
   var self = this;
   var url = req.url;
   var data = req.body;
@@ -192,8 +192,8 @@ Seraph.prototype._handleRequest = function (req, res) {
   case "/new":
     self._new(data, callback);
     break;
-  case "/announceAngel":
-    self._announceAngel(data, callback);
+  case "/announceTab":
+    self._announceTab(data, callback);
     break;
   default:
     break;
@@ -217,10 +217,10 @@ function main() {
   var args = process.argv;
 
   if (args[2] && args[2] === 'help') {
-    console.log('Usage: node seraph.js [options]\nOptions: debug\nhelp\n');
+    console.log('Usage: node hub.js [options]\nOptions: debug\nhelp\n');
     done();
   } else
-    new Seraph(args);
+    new Hub(args);
 }
 
 main();

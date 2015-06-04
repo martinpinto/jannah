@@ -1,6 +1,6 @@
 /*
- * God sees everything, knows everything, controls everything ...
- * Handle Seraphs that only want one angel exclusively.
+ * Master sees everything, knows everything, controls everything ...
+ * Handle Hubs that only want one Tab exclusively.
  */
 
 var acquire = require('acquire'),
@@ -18,25 +18,25 @@ var acquire = require('acquire'),
 var logger = null;
 
 
-var God = function (argv, done) {
+var Master = function (argv, done) {
 
   this._debug = false;
 
   if (argv[2])
     this._debug = argv[2] === "debug";
 
-  this._seraphim = {};
+  this._hub = {};
   this._server = null;
   this._backChannel = null;
   this.init();
 };
 
-God.prototype.init = function () {
+Master.prototype.init = function () {
   var self = this;
   self._setupLogger();
   self._backChannel = new io();
   self._backChannel.on('connection', self._onConnect.bind(self));
-  self._backChannel.listen(config.GOD_BACK_CHANNEL_PORT);
+  self._backChannel.listen(config.MASTER_BACK_CHANNEL_PORT);
   var app = express();
   app.use(compression());
   app.use(bodyParser.json());
@@ -46,10 +46,10 @@ God.prototype.init = function () {
   app.all('*', function (req, res) {
     self._handleRequest(req, res);
   });
-  app.listen(config.GOD_PORT);
+  app.listen(config.MASTER_PORT);
 };
 
-God.prototype._setupLogger = function () {
+Master.prototype._setupLogger = function () {
   if (this._debug === false) {
     logger = new winston.Logger({
       transports: [
@@ -66,7 +66,7 @@ God.prototype._setupLogger = function () {
   }
 };
 
-God.prototype._handleRequest = function (req, res) {
+Master.prototype._handleRequest = function (req, res) {
   var self = this;
   var url = req.url;
   var body = req.body;
@@ -98,20 +98,20 @@ God.prototype._handleRequest = function (req, res) {
       city = body.city;
     }
 
-    var seraph = self._delegate(country, city);
+    var hub = self._delegate(country, city);
 
-    if (!seraph) {
-      logger.warn('New request for an Angel failed because God doesnt think any are available !');
+    if (!hub) {
+      logger.warn('New request for a Tab failed because Master doesnt think any are available !');
       callback(Object.merge({
-          "status": "There doesn't seem to be any Seraph available "
+          "status": "There doesn't seem to be any hubs available "
         },
-        self._seraphim));
+        self._hub));
       break;
     }
-    seraph.ip = self._debug ? "127.0.0.1" : seraph.ip;
-    var seraphUrl = "http://" + seraph.ip + ":" + parseInt(config.SERAPH_PORT) + "/new";
-    logger.info('New request for an Angel - redirect to ' + seraphUrl);
-    res.redirect(307, seraphUrl);
+    hub.ip = self._debug ? "127.0.0.1" : hub.ip;
+    var hubUrl = "http://" + hub.ip + ":" + parseInt(config.HUB_PORT) + "/new";
+    logger.info('New request for an Tab - redirect to ' + hubUrl);
+    res.redirect(307, hubUrl);
     break;
   case "health":
     callback(self._locationBasedView(false));
@@ -125,20 +125,20 @@ God.prototype._handleRequest = function (req, res) {
   }
 };
 
-God.prototype._locationBasedView = function (forPublicView) {
+Master.prototype._locationBasedView = function (forPublicView) {
   var self = this;
   var formatted = {};
 
-  Object.values(self._seraphim, function (seraph) {
-    var location = seraph.location;
+  Object.values(self._hub, function (hub) {
+    var location = hub.location;
     if (!Object.has(formatted, location.country.toLowerCase()))
       formatted[location.country.toLowerCase()] = [];
     var newRequest = "/" + location.country.toLowerCase() + "/" + location.city.toLowerCase() + "/new";
     formatted[location.country.toLowerCase()].push({
       city: location.city.toLowerCase(),
       path: newRequest,
-      health: seraph.health,
-      availableAngels: seraph.maxAngels - seraph.activeAngels
+      health: hub.health,
+      availableTabs: hub.maxTabs - hub.activeTabs
     });
   });
 
@@ -148,25 +148,25 @@ God.prototype._locationBasedView = function (forPublicView) {
   return JSON.stringify(formatted);
 };
 
-God.prototype._delegate = function (country, city) {
+Master.prototype._delegate = function (country, city) {
   var self = this;
   var notFound = true;
   var ignore = [];
   var theChosenOne = null;
   console.log('delegate ' + country + city);
   while (notFound) {
-    var seraph = self._mostIdleSeraph(country, city, ignore);
-    if (!seraph)
+    var hub = self._mostIdleHub(country, city, ignore);
+    if (!hub)
       break;
     // high io will cause high load avg put not mem issues
     // often points to browser issues, watch this first.
-    if (seraph.health.loadavg.average() > 4) {
-      ignore.push(seraph.ip);
+    if (hub.health.loadavg.average() > 4) {
+      ignore.push(hub.ip);
       continue;
     }
     // check for mem issues
     // check for high cpu
-    theChosenOne = seraph;
+    theChosenOne = hub;
     notFound = false;
   }
 
@@ -175,50 +175,50 @@ God.prototype._delegate = function (country, city) {
   return theChosenOne;
 };
 
-// Finds a seraph which has the least number of active angels going on.
-God.prototype._mostIdleSeraph = function (country, city, ignore) {
+// Finds a hub which has the least number of active Tabs going on.
+Master.prototype._mostIdleHub = function (country, city, ignore) {
   var self = this;
-  var seraphim = Object.values(self._seraphim);
+  var hub = Object.values(self._hub);
 
-  seraphim = seraphim.filter(function (seraph) {
+  hub = hub.filter(function (hub) {
     if (!country) // we don't care about location here. 
       return true;
 
-    if (ignore.some(seraph.ip))
+    if (ignore.some(hub.ip))
       return false;
 
-    if (seraph.location.country === country && (seraph.location.city === city || !city))
+    if (hub.location.country === country && (hub.location.city === city || !city))
       return true;
     else
       return false;
   });
 
-  return seraphim.max(function (seraph) {
-    return seraph.maxAngels - seraph.activeAngels;
+  return hub.max(function (hub) {
+    return hub.maxTabs - hub.activeTabs;
   });
 };
 
-God.prototype._onConnect = function (socket) {
+Master.prototype._onConnect = function (socket) {
   var self = this;
   socket.on('disconnect', self._onDisconnect.bind(self, socket));
-  socket.on('seraphUpdate', self._onSeraphUpdate.bind(self, socket));
+  socket.on('HubUpdate', self._onHubUpdate.bind(self, socket));
 };
 
-God.prototype._onSeraphUpdate = function (socket, status) {
+Master.prototype._onHubUpdate = function (socket, status) {
   var self = this;
   logger.info("StatusUpdate : " + socket.id + ', status : ' + JSON.stringify(status));
-  self._seraphim[socket.id] = status;
+  self._hub[socket.id] = status;
 };
 
-God.prototype._onDisconnect = function (socket, err) {
+Master.prototype._onDisconnect = function (socket, err) {
   var self = this;
-  var seraph = Object.has(self._seraphim, socket.id) ? self._seraphim[socket.id] : null;
+  var hub = Object.has(self._hub, socket.id) ? self._hub[socket.id] : null;
 
   if (err) {
-    logger.warn('A seraph went down, and we had an error - seraph - ' + JSON.stringify(seraph) + '\n err ' + err);
-  } else if (seraph && !err) {
-    logger.info('A seraph went down ' + JSON.stringify(seraph));
-    self._seraphim = Object.reject(self._seraphim, socket.id);
+    logger.warn('A Hub went down, and we had an error - Hub - ' + JSON.stringify(hub) + '\n err ' + err);
+  } else if (hub && !err) {
+    logger.info('A Hub went down ' + JSON.stringify(hub));
+    self._hub = Object.reject(self._hub, socket.id);
   }
 };
 
@@ -239,12 +239,12 @@ function main() {
   var args = process.argv;
 
   if (args === 'help') {
-    console.log('Usage: node god.js [options]\nOptions:\n');
-    console.log('\tgod state', '\tGets the state of God.');
-    console.log('\tgod version', '\tGets the version of God\n');
+    console.log('Usage: node master.js [options]\nOptions:\n');
+    console.log('\tMaster state', '\tGets the state of Master.');
+    console.log('\tMaster version', '\tGets the version of Master\n');
     done();
   } else
-    new God(args, done);
+    new Master(args, done);
 }
 
 main();
