@@ -9,9 +9,9 @@ Utilities.getFreePort = function (reservedPorts, callback) {
   var i = -1;
 
   var availablePorts = [];
-  for (var p in config.ANGEL_PORTS) {
-    if (reservedPorts.indexOf(config.ANGEL_PORTS[p]) === -1) {
-      availablePorts.push(config.ANGEL_PORTS[p]);
+  for (var p in config.TAB_PORTS) {
+    if (reservedPorts.indexOf(config.TAB_PORTS[p]) === -1) {
+      availablePorts.push(config.TAB_PORTS[p]);
     }
   }
 
@@ -36,7 +36,7 @@ Utilities.getFreePort = function (reservedPorts, callback) {
         callback(null);
         return;
       }
-      _isPortFree(config.ANGEL_PORTS[i], findFreePort);
+      _isPortFree(config.TAB_PORTS[i], findFreePort);
     }
   };
   findFreePort(false);

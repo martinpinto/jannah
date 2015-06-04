@@ -3,11 +3,11 @@
 var webpage = require("webpage"),
   webserver = require('webserver'),
   config = require('./config.js'),
-  utils = require('./angelUtilities.js'),
+  utils = require('./tabUtilities.js'),
   adblock = require('./adblock.js').AdBlock;
 
 
-var Angel = function (ip, port) {
+var Tab = function (ip, port) {
   this._time = 0;
   this._resources = {};
   this._orphanResources = [];
@@ -19,7 +19,7 @@ var Angel = function (ip, port) {
 };
 
 
-Angel.prototype.init = function (ip, port) {
+Tab.prototype.init = function (ip, port) {
   var self = this;
   self._ip = ip;
   self._port = port;
@@ -52,20 +52,20 @@ Angel.prototype.init = function (ip, port) {
       function (request, response) {
         self._handleRequest(request, response);
       });
-    self._announceAngel();
+    self._announceTab();
   } catch (ex) {
     phantom.exit();
   }
-  console.log("Starting Angel on port: " + self._port);
+  console.log("Starting Tab on port: " + self._port);
   self._resetAutoDestruct();
 };
 
 
-Angel.prototype._announceAngel = function () {
+Tab.prototype._announceTab = function () {
   var self = this;
   var page = webpage.create();
   //window.close();
-  var url = 'http://localhost:' + config.SERAPH_PORT + '/announceAngel',
+  var url = 'http://localhost:' + config.HUB_PORT + '/announceTab',
     data = JSON.stringify({
       port: self._port
     }),
@@ -80,7 +80,7 @@ Angel.prototype._announceAngel = function () {
 };
 
 
-Angel.prototype._onResourceRequested = function (requestData, networkRequest) {
+Tab.prototype._onResourceRequested = function (requestData, networkRequest) {
   var self = this;
   //console.log('Request (#' + requestData.id + '): ' + JSON.stringify(requestData));
   if (self._adblock.getIsAd(requestData.url) === true) {
@@ -98,7 +98,7 @@ Angel.prototype._onResourceRequested = function (requestData, networkRequest) {
 };
 
 
-Angel.prototype._onResourceReceived = function (response) {
+Tab.prototype._onResourceReceived = function (response) {
   var self = this;
   switch (response.stage) {
   case 'start':
@@ -118,7 +118,7 @@ Angel.prototype._onResourceReceived = function (response) {
 };
 
 
-Angel.prototype._onResourceError = function (request) {
+Tab.prototype._onResourceError = function (request) {
   var self = this;
   self._orphanResources.splice(self._orphanResources.indexOf(request.id), 1);
   //self._resources[request.id].request = request;
@@ -126,7 +126,7 @@ Angel.prototype._onResourceError = function (request) {
 };
 
 
-Angel.prototype._onResourceTimeout = function (resourceError) {
+Tab.prototype._onResourceTimeout = function (resourceError) {
   var self = this;
   self._orphanResources.splice(self._orphanResources.indexOf(resourceError.id), 1);
   self._resources[resourceError.id].response = resourceError;
@@ -134,7 +134,7 @@ Angel.prototype._onResourceTimeout = function (resourceError) {
 };
 
 
-Angel.prototype._onConsoleMessage = function (msg, lineNum, sourceId) {
+Tab.prototype._onConsoleMessage = function (msg, lineNum, sourceId) {
   var self = this;
   self._consoleLog.push({
     msg: msg,
@@ -145,7 +145,7 @@ Angel.prototype._onConsoleMessage = function (msg, lineNum, sourceId) {
 };
 
 
-Angel.prototype._open = function (url, waitForResources, callback) {
+Tab.prototype._open = function (url, waitForResources, callback) {
   var self = this;
   self._resources = {};
   self._orphanResources = [];
@@ -173,7 +173,7 @@ Angel.prototype._open = function (url, waitForResources, callback) {
 };
 
 
-Angel.prototype._addCookie = function (name, value, domain, path, httponly, secure, expires, callback) {
+Tab.prototype._addCookie = function (name, value, domain, path, httponly, secure, expires, callback) {
   var success = phantom.addCookie({
     'name': name,
     'value': value,
@@ -189,7 +189,7 @@ Angel.prototype._addCookie = function (name, value, domain, path, httponly, secu
 };
 
 
-Angel.prototype._setUserAgent = function (userAgent, callback) {
+Tab.prototype._setUserAgent = function (userAgent, callback) {
   var self = this;
   self._page.settings.userAgent = userAgent;
   callback({
@@ -198,7 +198,7 @@ Angel.prototype._setUserAgent = function (userAgent, callback) {
 };
 
 
-Angel.prototype._getResources = function (callback) {
+Tab.prototype._getResources = function (callback) {
   var self = this;
   callback({
     success: true,
@@ -207,7 +207,7 @@ Angel.prototype._getResources = function (callback) {
 };
 
 
-Angel.prototype._getScreenshot = function (callback) {
+Tab.prototype._getScreenshot = function (callback) {
   var self = this;
   self._busy = true;
   utils.fixFlash();
@@ -236,7 +236,7 @@ Angel.prototype._getScreenshot = function (callback) {
 };
 
 
-Angel.prototype._waitForResources = function (timeout, callback) {
+Tab.prototype._waitForResources = function (timeout, callback) {
   var self = this;
   if (timeout === null || timeout === undefined) {
     timeout = 20000;
@@ -255,7 +255,7 @@ Angel.prototype._waitForResources = function (timeout, callback) {
 };
 
 
-Angel.prototype._destroy = function (callback) {
+Tab.prototype._destroy = function (callback) {
   var self = this;
   callback({
     success: true
@@ -266,14 +266,14 @@ Angel.prototype._destroy = function (callback) {
 };
 
 
-Angel.prototype._ping = function (callback) {
+Tab.prototype._ping = function (callback) {
   window.setTimeout(function () {
     callback(null);
   }, 5000);
 };
 
 
-Angel.prototype._evaluate = function (script, callback) {
+Tab.prototype._evaluate = function (script, callback) {
   var self = this;
   var result = null;
   if (typeof slimer !== 'undefined')
@@ -288,7 +288,7 @@ Angel.prototype._evaluate = function (script, callback) {
 };
 
 
-Angel.prototype._evaluateOnGecko = function (script, callback) {
+Tab.prototype._evaluateOnGecko = function (script, callback) {
   /*jslint evil: true */
   'use strict';
   var self = this;
@@ -300,7 +300,7 @@ Angel.prototype._evaluateOnGecko = function (script, callback) {
 };
 
 
-Angel.prototype._getConsoleLog = function (callback) {
+Tab.prototype._getConsoleLog = function (callback) {
   var self = this;
   callback({
     consoleLog: self._consoleLog
@@ -308,14 +308,14 @@ Angel.prototype._getConsoleLog = function (callback) {
 };
 
 
-Angel.prototype._getCookies = function (callback) {
+Tab.prototype._getCookies = function (callback) {
   var self = this;
   callback({
     cookies: phantom.cookies
   });
 };
 
-Angel.prototype._setScreenSize = function (size, callback) {
+Tab.prototype._setScreenSize = function (size, callback) {
   var self = this;
   self._page.viewportSize = {
     width: size.width,
@@ -327,7 +327,7 @@ Angel.prototype._setScreenSize = function (size, callback) {
 };
 
 
-Angel.prototype._resetAutoDestruct = function () {
+Tab.prototype._resetAutoDestruct = function () {
   var self = this;
   //console.log("Resetting auto Destruct");
   var destroyFunc = function () {
@@ -341,7 +341,7 @@ Angel.prototype._resetAutoDestruct = function () {
 };
 
 
-Angel.prototype._handleRequest = function (request, response) {
+Tab.prototype._handleRequest = function (request, response) {
   var self = this;
   if (!request.post)
     request.post = "";
@@ -421,5 +421,5 @@ if (phantom.args[0] !== undefined && phantom.args[1] !== undefined) {
   var ip = phantom.args[0];
   var port = phantom.args[1];
   console.log(ip, port);
-  new Angel(ip, port);
+  new Tab(ip, port);
 }
