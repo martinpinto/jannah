@@ -18,19 +18,19 @@ var acquire = require('acquire'),
 var PHANTOM_COMMAND = "phantomjs",
   SLIMER_COMMAND = "submodules/slimerjs/src/slimerjs";
 
-if(os.platform().indexOf('win') === 0){
+if (os.platform().indexOf('win') === 0) {
   SLIMER_COMMAND = "submodules\\slimerjs\\src\\slimerjs.bat";
 }
 
 // TODO
 // Summoner should be moved to his own file.
-var Summoner = module.exports = function (engine, ip, port, callback) {
+var Summoner = module.exports = function(engine, ip, port, callback) {
   this.init(engine, ip, port, callback);
 };
 
 Summoner.prototype = new events.EventEmitter();
 
-Summoner.prototype.init = function (engine, ip, port, callback) {
+Summoner.prototype.init = function(engine, ip, port, callback) {
   console.log(ip + ":" + port);
   var self = this;
   self._summonVerified = false;
@@ -46,25 +46,25 @@ Summoner.prototype.init = function (engine, ip, port, callback) {
   else
     self._tab = spawn(SLIMER_COMMAND, ["tab.js", ip, port]);
 
-  self._noSpawnTimer = timers.setTimeout(function () {
+  self._noSpawnTimer = timers.setTimeout(function() {
     self._onNoSpawn();
   }, 10000);
-  self._tab.stdout.on('data', function (data) {
+  self._tab.stdout.on('data', function(data) {
     console.log('stdout: ' + data);
   });
-  self._tab.stderr.on('data', function (data) {
+  self._tab.stderr.on('data', function(data) {
     console.log('stderr: ' + data);
   });
 };
 
-Summoner.prototype._kill = function () {
+Summoner.prototype._kill = function() {
   var self = this;
   console.log("killing tab on port " + self.id);
   self._tab.kill();
   self.emit('exit');
 };
 
-Summoner.prototype.release = function () {
+Summoner.prototype.release = function() {
   var self = this;
   self._callback({
     url: "http://" + self._ip + ":" + this.id
@@ -72,7 +72,7 @@ Summoner.prototype.release = function () {
   self._monitor();
 };
 
-Summoner.prototype._onNoSpawn = function () {
+Summoner.prototype._onNoSpawn = function() {
   var self = this;
   self._callback({
     url: null
@@ -80,19 +80,19 @@ Summoner.prototype._onNoSpawn = function () {
   self._kill();
 };
 
-Summoner.prototype._monitor = function () {
+Summoner.prototype._monitor = function() {
   var self = this;
   timers.clearTimeout(self._noSpawnTimer);
   console.log("Tab: " + self.id + " is alive.");
   var uri = "http://" + self._ip + ":" + self.id + "/ping";
   console.log(uri);
-  var request = http.get(uri, function () {
-      self._monitor();
-    })
-    .on('error', function () {
+  var request = http.get(uri, function() {
+    self._monitor();
+  })
+    .on('error', function() {
       self._kill();
     });
-  request.setTimeout(10000, function () {
+  request.setTimeout(10000, function() {
     self._kill();
   });
 };

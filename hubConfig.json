@@ -1,2 +1,7 @@
-{ "maxTabs" : 5 ,
-  "location" : { "country" : "gb", "city" : "london"}}
+{
+  "maxTabs": 5,
+  "location": {
+    "country": "gb",
+    "city": "london"
+  }
+}

@@ -21,7 +21,7 @@ var acquire = require('acquire'),
   winston = require('winston'),
   osm = require("os-monitor");
 
-var Hub = module.exports = function (args) {
+var Hub = module.exports = function(args) {
   this._tabs = {};
   this._debug = false;
 
@@ -38,7 +38,7 @@ var Hub = module.exports = function (args) {
   this.init();
 };
 
-Hub.prototype.init = function () {
+Hub.prototype.init = function() {
   var self = this;
 
   var app = express();
@@ -47,17 +47,17 @@ Hub.prototype.init = function () {
   app.use(bodyParser.urlencoded({
     extended: true
   }));
-  app.all('*', function (req, res) {
+  app.all('*', function(req, res) {
     self._handleRequest(req, res);
   });
   app.listen(config.HUB_PORT);
   console.log("Initializing Hub");
-  self._openBackChannel(function (err) {
+  self._openBackChannel(function(err) {
     if (err) console.log(err);
   });
 };
 
-Hub.prototype._exit = function (err) {
+Hub.prototype._exit = function(err) {
   var self = this;
   if (err)
     console.warn('Hub is going down because of an error ' + err);
@@ -66,13 +66,13 @@ Hub.prototype._exit = function (err) {
   self._backChannel.emit('disconnect', err);
 };
 
-Hub.prototype._openBackChannel = function (done) {
+Hub.prototype._openBackChannel = function(done) {
   var self = this;
   var hub = require(config.HUB_CONFIG_PATH);
   self._maxTabs = hub.maxTabs;
   self._location = hub.location;
   new Seq()
-    .seq(function () {
+    .seq(function() {
       if (self._debug !== true)
         utilities.getNetworkIP(this);
       else
@@ -80,32 +80,32 @@ Hub.prototype._openBackChannel = function (done) {
           ip: "127.0.0.1"
         });
     })
-    .seq(function (data) {
+    .seq(function(data) {
       self._ip = data.ip;
       self._monitorHealth(this);
     })
-    .seq(function () {
+    .seq(function() {
       self._talkToMaster(this);
     })
-    .seq(function () {
+    .seq(function() {
       console.log("Hub up and going");
     })
-    .catch(function (err) {
+    .catch(function(err) {
       done(err);
     });
 };
 
-Hub.prototype._monitorHealth = function (done) {
+Hub.prototype._monitorHealth = function(done) {
   var self = this;
   console.log("Checking hub health");
   osm.start();
-  osm.on('monitor', function (event) {
+  osm.on('monitor', function(event) {
     self._health = Object.reject(event, "type");
   });
   done();
 };
 
-Hub.prototype._talkToMaster = function (done) {
+Hub.prototype._talkToMaster = function(done) {
   var self = this;
   console.log("Registering with Hub");
   // Establish the back channel to Master !
@@ -117,12 +117,12 @@ Hub.prototype._talkToMaster = function (done) {
   self._backChannel = io.connect('http://' + masterIp + ':' + config.MASTER_BACK_CHANNEL_PORT,
     socketOptions);
 
-  self._backChannel.on('connect_error', function (err) {
+  self._backChannel.on('connect_error', function(err) {
     console.log('BackChannel Error received : ' + err);
     done(err);
   });
 
-  self._backChannel.on('connect', function () {
+  self._backChannel.on('connect', function() {
     console.log('BackChannel open and ready for use');
     // Every minute send an health update to Master.
     self._sendUpdateToMaster.bind(self);
@@ -131,7 +131,7 @@ Hub.prototype._talkToMaster = function (done) {
   });
 };
 
-Hub.prototype._sendUpdateToMaster = function () {
+Hub.prototype._sendUpdateToMaster = function() {
   var self = this;
   self._backChannel.emit('HubUpdate', {
     health: self._health,
@@ -142,16 +142,16 @@ Hub.prototype._sendUpdateToMaster = function () {
   });
 };
 
-Hub.prototype._new = function (data, callback) {
+Hub.prototype._new = function(data, callback) {
   var self = this;
-  var func = function (port) {
+  var func = function(port) {
     console.log("GOT FREE PORT", port);
     if (port === null)
       return callback({
         url: null
       });
 
-    var onExit = function () {
+    var onExit = function() {
       console.log("Purging :" + port);
       self._tabs[port].removeAllListeners(['exit']);
       delete self._tabs[port];
@@ -170,7 +170,7 @@ Hub.prototype._new = function (data, callback) {
   utilities.getFreePort(self._reservedPorts, func);
 };
 
-Hub.prototype._announceTab = function (data, callback) {
+Hub.prototype._announceTab = function(data, callback) {
   var self = this;
   var port = data.port;
   console.log(data.port);
@@ -178,35 +178,35 @@ Hub.prototype._announceTab = function (data, callback) {
   callback({});
 };
 
-Hub.prototype._handleRequest = function (req, res) {
+Hub.prototype._handleRequest = function(req, res) {
   var self = this;
   var url = req.url;
   var data = req.body;
-  var callback = function (data) {
+  var callback = function(data) {
     res.statusCode = 200;
     res.write(JSON.stringify(data));
     res.end();
   };
 
   switch (url) {
-  case "/new":
-    self._new(data, callback);
-    break;
-  case "/announceTab":
-    self._announceTab(data, callback);
-    break;
-  default:
-    break;
+    case "/new":
+      self._new(data, callback);
+      break;
+    case "/announceTab":
+      self._announceTab(data, callback);
+      break;
+    default:
+      break;
   }
 };
 
 function main() {
 
-  process.on('SIGINT', function () {
+  process.on('SIGINT', function() {
     process.exit(1);
   });
 
-  var done = function (err) {
+  var done = function(err) {
     if (err) {
       console.warn(err);
       console.trace();

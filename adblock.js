@@ -3,13 +3,13 @@ var fs = require('fs'),
 
 var AdBlock = {};
 
-var AdBlock = function () {
+var AdBlock = function() {
   'use strict';
   this.init();
 };
 
 
-AdBlock.prototype.init = function () {
+AdBlock.prototype.init = function() {
   'use strict';
   var self = this;
   self.whitelist = null;
@@ -19,28 +19,28 @@ AdBlock.prototype.init = function () {
   self.loadFilterLists();
 };
 
-AdBlock.prototype.parseFilterList = function (path) {
+AdBlock.prototype.parseFilterList = function(path) {
   'use strict';
   var self = this,
     lines = fs.read(path, 'utf-8').trim().split(/\n+/),
     blEntries = [],
     wlEntries = [],
     rule = null,
-    append = function (list, entries) {
+    append = function(list, entries) {
       if (entries.length === 0) {
         return list;
       } else {
         return ((list === null) ? '' : list + '|') + entries.join('|');
       }
     },
-    regexpFromLine = function (line) {
-      var regexpEscape = function (text) {
+    regexpFromLine = function(line) {
+      var regexpEscape = function(text) {
         return text.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&");
       };
       return regexpEscape(line).replace(/\\\*/, '.*').replace(/\\\^|\\\|\\\||\\\$\.*/g, ''); // ignore ^ and || and $anything
     };
 
-  lines.forEach(function (line) {
+  lines.forEach(function(line) {
     if (line.match(/^!ref\|/)) {
       self.addSpoofingRule('referer', line);
     } else if (line.match(/^!ua\|/)) {
@@ -56,7 +56,7 @@ AdBlock.prototype.parseFilterList = function (path) {
       if (!rule[0].length) {
         rule[0] = '+++';
       }
-      rule[0].split(',').forEach(function (domain) {
+      rule[0].split(',').forEach(function(domain) {
         if (!self.selectors[domain]) {
           self.selectors[domain] = [];
         }
@@ -69,13 +69,13 @@ AdBlock.prototype.parseFilterList = function (path) {
   self.whitelist = append(self.whitelist, wlEntries);
 };
 
-AdBlock.prototype.loadFilterLists = function () {
+AdBlock.prototype.loadFilterLists = function() {
   'use strict';
   var self = this;
   self.parseFilterList('easylist.txt');
 };
 
-AdBlock.prototype.getIsAd = function (url) {
+AdBlock.prototype.getIsAd = function(url) {
   'use strict';
   var self = this,
     site = Utils.getSitename(url);
@@ -92,7 +92,7 @@ AdBlock.prototype.getIsAd = function (url) {
   return false;
 };
 
-AdBlock.prototype.getSelectorsForDomain = function (domain) {
+AdBlock.prototype.getSelectorsForDomain = function(domain) {
   'use strict';
   var self = this,
     selectors = self.selectors['+++'].slice() || [];
