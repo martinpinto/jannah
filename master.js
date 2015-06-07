@@ -1,8 +1,3 @@
-/*
- * Master sees everything, knows everything, controls everything ...
- * Handle Hubs that only want one Tab exclusively.
- */
-
 var acquire = require('acquire'),
   bodyParser = require('body-parser'),
   compression = require('compression'),
@@ -19,11 +14,10 @@ var logger = null;
 
 
 var Master = function(argv, done) {
-
   this._debug = false;
 
   if (argv[2])
-    this._debug = argv[2] === "debug";
+    this._debug = argv[2] === 'debug';
 
   this._hub = {};
   this._server = null;
@@ -47,6 +41,7 @@ Master.prototype.init = function() {
     self._handleRequest(req, res);
   });
   app.listen(config.MASTER_PORT);
+  logger.info('Master started');
 };
 
 Master.prototype._setupLogger = function() {
@@ -78,16 +73,16 @@ Master.prototype._handleRequest = function(req, res) {
     res.end();
   };
 
-  var parts = url.split("/");
+  var parts = url.split('/');
   var action = parts.last();
-  console.log("------- Requessted -------");
-  console.log(url);
-  console.log(body);
-  console.log('parts ' + parts.toString());
-  console.log("--------------------------");
+  logger.info('------- Requested -------');
+  logger.info(url);
+  logger.info(body);
+  logger.info('parts ' + parts.toString());
+  logger.info('--------------------------');
 
   switch (action) {
-    case "new":
+    case 'new':
       var country = null,
         city = null;
 
@@ -102,26 +97,26 @@ Master.prototype._handleRequest = function(req, res) {
       var hub = self._delegate(country, city);
 
       if (!hub) {
-        logger.warn('New request for a Tab failed because Master doesnt think any are available !');
+        logger.warn('New request for a Tab failed because Master doesn\'t think any are available!');
         callback(Object.merge({
-            "status": "There doesn't seem to be any hubs available "
+            'status': 'There doesn\'t seem to be any hubs available'
           },
           self._hub));
         break;
       }
-      hub.ip = self._debug ? "127.0.0.1" : hub.ip;
-      var hubUrl = "http://" + hub.ip + ":" + parseInt(config.HUB_PORT) + "/new";
+      hub.ip = self._debug ? config.DEFAULT_IP : hub.ip;
+      var hubUrl = 'http://' + hub.ip + ':' + parseInt(config.HUB_PORT) + '/new';
       logger.info('New request for an Tab - redirect to ' + hubUrl);
       res.redirect(307, hubUrl);
       break;
-    case "health":
+    case 'health':
       callback(self._locationBasedView(false));
       break;
-    case "locations":
+    case 'locations':
       callback(self._locationBasedView(true));
       break;
     default:
-      callback("What was that ?, didn't recognize your call.");
+      callback('What was that? Didn\'t recognize your call.');
       break;
   }
 };
@@ -134,7 +129,7 @@ Master.prototype._locationBasedView = function(forPublicView) {
     var location = hub.location;
     if (!Object.has(formatted, location.country.toLowerCase()))
       formatted[location.country.toLowerCase()] = [];
-    var newRequest = "/" + location.country.toLowerCase() + "/" + location.city.toLowerCase() + "/new";
+    var newRequest = '/' + location.country.toLowerCase() + '/' + location.city.toLowerCase() + '/new';
     formatted[location.country.toLowerCase()].push({
       city: location.city.toLowerCase(),
       path: newRequest,
@@ -144,7 +139,7 @@ Master.prototype._locationBasedView = function(forPublicView) {
   });
 
   if (forPublicView)
-    formatted = Object.reject(formatted, "health");
+    formatted = Object.reject(formatted, 'health');
 
   return JSON.stringify(formatted);
 };
@@ -154,7 +149,7 @@ Master.prototype._delegate = function(country, city) {
   var notFound = true;
   var ignore = [];
   var theChosenOne = null;
-  console.log('delegate ' + country + city);
+  logger.info('delegate ' + country + city);
   while (notFound) {
     var hub = self._mostIdleHub(country, city, ignore);
     if (!hub)
@@ -171,7 +166,7 @@ Master.prototype._delegate = function(country, city) {
     notFound = false;
   }
 
-  console.log('delegate found ' + JSON.stringify(theChosenOne));
+  logger.info('delegate found ' + JSON.stringify(theChosenOne));
 
   return theChosenOne;
 };
@@ -207,7 +202,7 @@ Master.prototype._onConnect = function(socket) {
 
 Master.prototype._onHubUpdate = function(socket, status) {
   var self = this;
-  logger.info("StatusUpdate : " + socket.id + ', status : ' + JSON.stringify(status));
+  logger.info('StatusUpdate : ' + socket.id + ', status : ' + JSON.stringify(status));
   self._hub[socket.id] = status;
 };
 
@@ -218,13 +213,12 @@ Master.prototype._onDisconnect = function(socket, err) {
   if (err) {
     logger.warn('A Hub went down, and we had an error - Hub - ' + JSON.stringify(hub) + '\n err ' + err);
   } else if (hub && !err) {
-    logger.info('A Hub went down ' + JSON.stringify(hub));
+    logger.error('A Hub went down ' + JSON.stringify(hub));
     self._hub = Object.reject(self._hub, socket.id);
   }
 };
 
 function main() {
-
   process.on('SIGINT', function() {
     process.exit(1);
   });
@@ -240,9 +234,9 @@ function main() {
   var args = process.argv;
 
   if (args === 'help') {
-    console.log('Usage: node master.js [options]\nOptions:\n');
-    console.log('\tMaster state', '\tGets the state of Master.');
-    console.log('\tMaster version', '\tGets the version of Master\n');
+    logger.info('Usage: node master.js [options]\nOptions:\n');
+    logger.info('\tMaster state', '\tGets the state of Master.');
+    logger.info('\tMaster version', '\tGets the version of Master\n');
     done();
   } else
     new Master(args, done);

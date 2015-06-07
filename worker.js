@@ -1,11 +1,7 @@
-/*jshint strict: true*/
-/*global require, module, console, slimer, phantom*/
-
 var WebPage = require('webpage'),
     AdBlock = require('adblock');
 
 var Worker = module.exports = function () {
-    'use strict';
     this.time = 0;
     this.resources = {};
     this.orphanResources = [];
@@ -18,7 +14,6 @@ var Worker = module.exports = function () {
 };
 
 Worker.prototype.init = function () {
-    'use strict';
     var self = this;
     self.page = WebPage.create();
     self.page.viewportSize = {
@@ -43,7 +38,6 @@ Worker.prototype.init = function () {
 };
 
 Worker.prototype.onResourceRequested = function (requestData, networkRequest) {
-    'use strict';
     var self = this;
     //console.log('Request (#' + requestData.id + '): ' + JSON.stringify(requestData));
     if (self.adBlock.getIsAd(requestData.url) === true) {
@@ -57,7 +51,6 @@ Worker.prototype.onResourceRequested = function (requestData, networkRequest) {
 };
 
 Worker.prototype.onResourceReceived = function (response) {
-    'use strict';
     var self = this;
     self.resources[response.id].response = response;
     //console.log('Response (#' + response.id + ', stage "' + response.stage + '"): ' + JSON.stringify(self.resources[response.id]));
@@ -67,7 +60,6 @@ Worker.prototype.onResourceReceived = function (response) {
 };
 
 Worker.prototype.onResourceError = function (request) {
-    'use strict';
     var self = this;
     self.orphanResources.splice(self.orphanResources.indexOf(request.id), 1);
     self.resources[request.id].request = request;
@@ -75,7 +67,6 @@ Worker.prototype.onResourceError = function (request) {
 };
 
 Worker.prototype.open = function (url, callback) {
-    'use strict';
     var self = this;
     self.resources = {};
     self.orphanResources = [];
@@ -92,7 +83,6 @@ Worker.prototype.open = function (url, callback) {
 };
 
 Worker.prototype.waitForResources = function (timeout, callback) {
-    'use strict';
     var self = this,
         time = Date.now();
 
@@ -104,7 +94,6 @@ Worker.prototype.waitForResources = function (timeout, callback) {
 };
 
 Worker.prototype.getAds = function () {
-    'use strict';
     var self = this,
         adUris = [],
         ads = [],
@@ -123,7 +112,7 @@ Worker.prototype.getAds = function () {
         if (self.ads[i] !== undefined) {
             adId = self.ads[i];
             adUris.push(self.resources[adId]);
-            if (self.resources[adId].response.contentType.indexOf("javascript") !== -1) {
+            if (self.resources[adId].response.contentType.indexOf('javascript') !== -1) {
                 console.log(self.resources[adId].request.url);
             }
             selector = self.page.evaluate(evaluate, self.resources[adId].request.url);
@@ -144,7 +133,6 @@ Worker.prototype.getAds = function () {
 };
 
 Worker.prototype.captureRect = function (target, rect) {
-    'use strict';
     var self = this,
         previousRect = self.page.clipRect,
         newRect = {
@@ -160,7 +148,6 @@ Worker.prototype.captureRect = function (target, rect) {
 
 
 Worker.prototype.captureAds = function () {
-    'use strict';
     var self = this,
         i = 0,
         ads = null,
@@ -173,27 +160,12 @@ Worker.prototype.captureAds = function () {
 
     ads = self.getAds();
     for (i = 0; i < ads.length; i += 1) {
-        self.captureRect(Date.now() + ".png", ads[i].getBoundingClientRect());
+        self.captureRect(Date.now() + '.png', ads[i].getBoundingClientRect());
         adUris.push(ads[i].src);
     }
-
-    /*
-    for (i = 0; i < framesCount; i += 1) {
-        frame = self.page.evaluate(evaluate, i);
-        self.page.switchToFrame(i);
-
-        if (frame.frameElement !== null) {
-            if (adUris.indexOf(frame.frameElement.src) === -1) {
-                self.captureAds();
-            }
-        }
-        self.page.switchToParentFrame();
-    }
-    */
 };
 
 Worker.prototype.run = function (url, userAgent, cookie, callback) {
-    'use strict';
     var self = this,
         ads = null,
         i = null;
@@ -206,20 +178,20 @@ Worker.prototype.run = function (url, userAgent, cookie, callback) {
     }
     self.open(url, function () {
         slimer.wait(10000);
-        console.log("Cutting out ads");
-        self.page.render("screenshot.png");
+        console.log('Cutting out ads');
+        self.page.render('screenshot.png');
         self.page.viewportSize = {
             width: 1280,
             height: 2048
         };
         self.captureAds();
-        self.page.render("screenshot.png");
+        self.page.render('screenshot.png');
         callback();
     });
 };
 
 var worker = new Worker();
-worker.run("http://bild.de/",
+worker.run('http://bild.de/',
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:30.0) Gecko/20100101 Firefox/30.0',
     null,
     function () {

@@ -4,13 +4,11 @@ var fs = require('fs'),
 var AdBlock = {};
 
 var AdBlock = function() {
-  'use strict';
   this.init();
 };
 
 
 AdBlock.prototype.init = function() {
-  'use strict';
   var self = this;
   self.whitelist = null;
   self.blacklist = null;
@@ -20,7 +18,6 @@ AdBlock.prototype.init = function() {
 };
 
 AdBlock.prototype.parseFilterList = function(path) {
-  'use strict';
   var self = this,
     lines = fs.read(path, 'utf-8').trim().split(/\n+/),
     blEntries = [],
@@ -35,7 +32,7 @@ AdBlock.prototype.parseFilterList = function(path) {
     },
     regexpFromLine = function(line) {
       var regexpEscape = function(text) {
-        return text.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, "\\$&");
+        return text.replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, '\\$&');
       };
       return regexpEscape(line).replace(/\\\*/, '.*').replace(/\\\^|\\\|\\\||\\\$\.*/g, ''); // ignore ^ and || and $anything
     };
@@ -70,13 +67,11 @@ AdBlock.prototype.parseFilterList = function(path) {
 };
 
 AdBlock.prototype.loadFilterLists = function() {
-  'use strict';
   var self = this;
   self.parseFilterList('easylist.txt');
 };
 
 AdBlock.prototype.getIsAd = function(url) {
-  'use strict';
   var self = this,
     site = Utils.getSitename(url);
   if (!url.match(self.whitelist) && url.match(self.blacklist)) {
@@ -93,7 +88,6 @@ AdBlock.prototype.getIsAd = function(url) {
 };
 
 AdBlock.prototype.getSelectorsForDomain = function(domain) {
-  'use strict';
   var self = this,
     selectors = self.selectors['+++'].slice() || [];
   return selectors.concat(self.selectors[Utils.getSitename(domain)] || []);
