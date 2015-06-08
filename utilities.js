@@ -1,5 +1,3 @@
-/*jslint node: true, indent: 2, maxlen: 100*/
-
 var acquire = require('acquire'),
   config = acquire('config'),
   net = require('net');
@@ -21,7 +19,7 @@ Utilities.getFreePort = function (reservedPorts, callback) {
       client.destroy();
       callback(true);
     });
-    client.connect(port, "localhost", function () {
+    client.connect(port, 'localhost', function () {
       client.destroy();
       callback(false);
     });

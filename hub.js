@@ -1,8 +1,3 @@
-/*jshint indent: 2*/
-/*jslint indent: 2, maxlen: 100*/
-/*jslint node: true, indent: 2, maxlen: 100*/
-"use strict";
-
 var acquire = require('acquire'),
   bodyParser = require('body-parser'),
   compression = require('compression'),
@@ -19,19 +14,21 @@ var acquire = require('acquire'),
   utilities = acquire('utilities'),
   Summoner = acquire('summoner'),
   winston = require('winston'),
-  osm = require("os-monitor");
+  osm = require('os-monitor');
+
+var logger = null;
 
 var Hub = module.exports = function(args) {
   this._tabs = {};
   this._debug = false;
 
   if (args[2]) {
-    this._debug = args[2] === "debug";
+    this._debug = args[2] === 'debug';
   }
 
   this._backChannel = null;
   this._health = {};
-  this._ip = "";
+  this._ip = '';
   this._maxTabs = 0;
   this._reservedPorts = [];
   this._location = {};
@@ -42,6 +39,7 @@ Hub.prototype.init = function() {
   var self = this;
 
   var app = express();
+  self._setupLogger();
   app.use(compression());
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({
@@ -51,10 +49,28 @@ Hub.prototype.init = function() {
     self._handleRequest(req, res);
   });
   app.listen(config.HUB_PORT);
-  console.log("Initializing Hub");
+  logger.info('Initializing Hub');
   self._openBackChannel(function(err) {
-    if (err) console.log(err);
+    if (err) logger.info(err);
   });
+};
+
+Hub.prototype._setupLogger = function() {
+  if (this._debug === false) {
+    logger = new winston.Logger({
+      transports: [
+        new Papertrail({
+          host: 'logs.papertrailapp.com',
+          port: 38599
+        })
+      ]
+    });
+  } else {
+    logger = new(winston.Logger)({
+      transports: [new winston.transports.Console()],
+      exceptionHandlers: [new winston.transports.Console()]
+    });
+  }
 };
 
 Hub.prototype._exit = function(err) {
@@ -62,7 +78,7 @@ Hub.prototype._exit = function(err) {
   if (err)
     console.warn('Hub is going down because of an error ' + err);
   else
-    console.log('Hub exited cleanly ...');
+    logger.info('Hub exited cleanly ...');
   self._backChannel.emit('disconnect', err);
 };
 
@@ -73,11 +89,11 @@ Hub.prototype._openBackChannel = function(done) {
   self._location = hub.location;
   new Seq()
     .seq(function() {
-      if (self._debug !== true)
+      if (!self._debug)
         utilities.getNetworkIP(this);
       else
         this(null, {
-          ip: "127.0.0.1"
+          ip: config.DEFAULT_IP
         });
     })
     .seq(function(data) {
@@ -88,7 +104,7 @@ Hub.prototype._openBackChannel = function(done) {
       self._talkToMaster(this);
     })
     .seq(function() {
-      console.log("Hub up and going");
+      logger.info('Hub up and going');
     })
     .catch(function(err) {
       done(err);
@@ -97,33 +113,33 @@ Hub.prototype._openBackChannel = function(done) {
 
 Hub.prototype._monitorHealth = function(done) {
   var self = this;
-  console.log("Checking hub health");
+  logger.info('Checking hub health');
   osm.start();
   osm.on('monitor', function(event) {
-    self._health = Object.reject(event, "type");
+    self._health = Object.reject(event, 'type');
   });
   done();
 };
 
 Hub.prototype._talkToMaster = function(done) {
   var self = this;
-  console.log("Registering with Hub");
+  logger.info('Registering with Hub');
   // Establish the back channel to Master !
   var socketOptions = {
     transports: ['websocket']
   };
 
-  var masterIp = self._debug ? "127.0.0.1" : config.MASTER_ADDRESS;
+  var masterIp = self._debug ? config.DEFAULT_IP : config.MASTER_ADDRESS;
   self._backChannel = io.connect('http://' + masterIp + ':' + config.MASTER_BACK_CHANNEL_PORT,
     socketOptions);
 
   self._backChannel.on('connect_error', function(err) {
-    console.log('BackChannel Error received : ' + err);
+    logger.info('BackChannel Error received : ' + err);
     done(err);
   });
 
   self._backChannel.on('connect', function() {
-    console.log('BackChannel open and ready for use');
+    logger.info('BackChannel open and ready for use');
     // Every minute send an health update to Master.
     self._sendUpdateToMaster.bind(self);
     var tenSeconds = 10 * 1000;
@@ -145,14 +161,14 @@ Hub.prototype._sendUpdateToMaster = function() {
 Hub.prototype._new = function(data, callback) {
   var self = this;
   var func = function(port) {
-    console.log("GOT FREE PORT", port);
+    logger.info('Got free port', port);
     if (port === null)
       return callback({
         url: null
       });
 
     var onExit = function() {
-      console.log("Purging :" + port);
+      logger.info('Purging :' + port);
       self._tabs[port].removeAllListeners(['exit']);
       delete self._tabs[port];
       self._reservedPorts.splice(self._reservedPorts.indexOf(self.id), 1);
@@ -160,7 +176,7 @@ Hub.prototype._new = function(data, callback) {
     };
 
     self._reservedPorts.push(port);
-    var ip = self._debug ? "127.0.0.1" : self._ip;
+    var ip = self._debug ? config.DEFAULT_IP : self._ip;
 
     self._tabs[port] = new Summoner(data.engine, ip, port, callback);
     self._tabs[port].on('exit', onExit);
@@ -173,7 +189,7 @@ Hub.prototype._new = function(data, callback) {
 Hub.prototype._announceTab = function(data, callback) {
   var self = this;
   var port = data.port;
-  console.log(data.port);
+  logger.info(data.port);
   self._tabs[port].release();
   callback({});
 };
@@ -189,10 +205,10 @@ Hub.prototype._handleRequest = function(req, res) {
   };
 
   switch (url) {
-    case "/new":
+    case '/new':
       self._new(data, callback);
       break;
-    case "/announceTab":
+    case '/announceTab':
       self._announceTab(data, callback);
       break;
     default:
@@ -201,7 +217,6 @@ Hub.prototype._handleRequest = function(req, res) {
 };
 
 function main() {
-
   process.on('SIGINT', function() {
     process.exit(1);
   });
@@ -217,7 +232,7 @@ function main() {
   var args = process.argv;
 
   if (args[2] && args[2] === 'help') {
-    console.log('Usage: node hub.js [options]\nOptions: debug\nhelp\n');
+    logger.info('Usage: node hub.js [options]\nOptions: debug\nhelp\n');
     done();
   } else
     new Hub(args);

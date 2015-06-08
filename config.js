@@ -1,5 +1,3 @@
-/* global exports, process, require */
-/* jshint unused: false */
 var config = {},
   system = null,
   env = null,
@@ -23,8 +21,9 @@ try {
 function getEnv(value, defaultValue) {
   return (typeof value !== 'undefined' && value !== '') ? value : defaultValue;
 }
+config.DEFAULT_IP = '127.0.0.1';
 
-config.MASTER_ADDRESS = getEnv(env.MASTER_ADDRESS, "127.0.0.1");
+config.MASTER_ADDRESS = getEnv(env.MASTER_ADDRESS, config.DEFAULT_IP);
 config.MASTER_PORT = getEnv(env.MASTER_PORT, 7331);
 config.MASTER_BACK_CHANNEL_PORT = getEnv(env.MASTER_BACK_CHANNEL_PORT, 3000);
 

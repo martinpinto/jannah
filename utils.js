@@ -1,5 +1,3 @@
-/* exported Utils */
-
 var Utils = {};
 try {
   if (module) {
@@ -12,11 +10,10 @@ function getHostName(url) {
   if (url.length === 1) {
     return url[0];
   }
-  return url[1].split("/")[0];
+  return url[1].split('/')[0];
 }
 
 Utils.getSitename = function (url) {
-  'use strict';
   var x = getHostName(url).split('.'),
     tld = x.pop(),
     host = x.pop();

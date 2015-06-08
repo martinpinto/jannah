@@ -1,6 +1,4 @@
-/* global require, module, window, phantom, slimer */
-
-var webpage = require("webpage"),
+var webpage = require('webpage'),
   webserver = require('webserver'),
   config = require('./config.js'),
   utils = require('./tabUtilities.js'),
@@ -26,7 +24,7 @@ Tab.prototype.init = function (ip, port) {
   self._page = webpage.create();
   self._server = webserver.create();
   self._adblock = new adblock();
-  console.log("Creating new Tab: " + ip + ":" + port);
+  console.log('Creating new Tab: ' + ip + ':' + port);
   self._page.viewportSize = {
     width: 1024,
     height: 768
@@ -48,7 +46,7 @@ Tab.prototype.init = function (ip, port) {
     self._onConsoleMessage(msg, lineNum, sourceId);
   };
   try {
-    self._server.listen(ip + ":" + port,
+    self._server.listen(ip + ':' + port,
       function (request, response) {
         self._handleRequest(request, response);
       });
@@ -56,7 +54,7 @@ Tab.prototype.init = function (ip, port) {
   } catch (ex) {
     phantom.exit();
   }
-  console.log("Starting Tab on port: " + self._port);
+  console.log('Starting Tab on port: ' + self._port);
   self._resetAutoDestruct();
 };
 
@@ -70,11 +68,11 @@ Tab.prototype._announceTab = function () {
       port: self._port
     }),
     headers = {
-      "Content-Type": "application/json"
+      'Content-Type': 'application/json'
     };
   page.open(url, 'post', data, headers, function (status) {
     page.close();
-    if (status !== "success")
+    if (status !== 'success')
       phantom.exit();
   });
 };
@@ -114,7 +112,7 @@ Tab.prototype._onResourceReceived = function (response) {
   }
   self._orphanResources.splice(self._orphanResources.indexOf(response.id), 1);
   self._resources[response.id].response = response;
-  //console.log('Response (#' + response.id + ', stage "' + response.stage + '"): ' + JSON.stringify(self._resources[response.id]));
+  //console.log('Response (#' + response.id + ', stage '' + response.stage + ''): ' + JSON.stringify(self._resources[response.id]));
 };
 
 
@@ -122,7 +120,7 @@ Tab.prototype._onResourceError = function (request) {
   var self = this;
   self._orphanResources.splice(self._orphanResources.indexOf(request.id), 1);
   //self._resources[request.id].request = request;
-  //console.log('Request (#' + request.id + ', timed out: "' + JSON.stringify(self._resources[request.id]));
+  //console.log('Request (#' + request.id + ', timed out: '' + JSON.stringify(self._resources[request.id]));
 };
 
 
@@ -130,7 +128,7 @@ Tab.prototype._onResourceTimeout = function (resourceError) {
   var self = this;
   self._orphanResources.splice(self._orphanResources.indexOf(resourceError.id), 1);
   self._resources[resourceError.id].response = resourceError;
-  //console.log('Request (#' + resourceError.id + ' had error: "' + JSON.stringify(self._resources[resourceError.id]));
+  //console.log('Request (#' + resourceError.id + ' had error: '' + JSON.stringify(self._resources[resourceError.id]));
 };
 
 
@@ -141,7 +139,7 @@ Tab.prototype._onConsoleMessage = function (msg, lineNum, sourceId) {
     lineNum: lineNum,
     sourceId: sourceId
   });
-  console.log('CONSOLE: ' + msg + ' (from line #' + lineNum + ' in "' + sourceId + '")');
+  console.log('CONSOLE: ' + msg + ' (from line #' + lineNum + ' in \'' + sourceId + '\')');
 };
 
 
@@ -245,7 +243,7 @@ Tab.prototype._waitForResources = function (timeout, callback) {
 
   var wait = function () {
     if (self._orphanResources.length > 0 && Date.now() - time < timeout) {
-      //console.log("Orphaned resources: " + self._orphanResources.length + " " + self._orphanResources);
+      //console.log('Orphaned resources: ' + self._orphanResources.length + ' ' + self._orphanResources);
       setTimeout(wait, 1000);
     } else {
       callback();
@@ -277,7 +275,7 @@ Tab.prototype._evaluate = function (script, callback) {
   var self = this;
   var result = null;
   if (typeof slimer !== 'undefined')
-    result = self._page.evaluateJavaScript("(" + script + ")()");
+    result = self._page.evaluateJavaScript('(' + script + ')()');
   else
     result = self._page.evaluateJavaScript(script);
 
@@ -329,7 +327,7 @@ Tab.prototype._setScreenSize = function (size, callback) {
 
 Tab.prototype._resetAutoDestruct = function () {
   var self = this;
-  //console.log("Resetting auto Destruct");
+  //console.log('Resetting auto Destruct');
   var destroyFunc = function () {
     if (!self._busy) {
       phantom.exit();
@@ -344,11 +342,11 @@ Tab.prototype._resetAutoDestruct = function () {
 Tab.prototype._handleRequest = function (request, response) {
   var self = this;
   if (!request.post)
-    request.post = "";
-  var data = request.post !== "" ? JSON.parse(request.post) : {};
+    request.post = '';
+  var data = request.post !== '' ? JSON.parse(request.post) : {};
   var callback = function (data) {
     response.statusCode = 200;
-    data = data !== null ? JSON.stringify(data) : "";
+    data = data !== null ? JSON.stringify(data) : '';
     response.write(data);
     response.close();
   };
@@ -356,61 +354,61 @@ Tab.prototype._handleRequest = function (request, response) {
     window.focus();
   });
   switch (request.url) {
-  case "/open":
+  case '/open':
     self._resetAutoDestruct();
     self._open(data.url, data.waitForResources, callback);
     break;
-  case "/addCookie":
+  case '/addCookie':
     self._resetAutoDestruct();
     self._addCookie(data.name, data.value, data.domain, data.path,
       data.httponly, data.secure, data.expires, callback);
     break;
-  case "/setUserAgent":
+  case '/setUserAgent':
     self._resetAutoDestruct();
     self._setUserAgent(data.userAgent, callback);
     break;
-  case "/getResources":
+  case '/getResources':
     self._resetAutoDestruct();
     self._getResources(callback);
     break;
-  case "/getScreenshot":
+  case '/getScreenshot':
     self._resetAutoDestruct();
     self._getScreenshot(callback);
     break;
-  case "/destroy":
+  case '/destroy':
     self._destroy(callback);
     break;
-  case "/ping":
+  case '/ping':
     self._ping(callback);
     break;
-  case "/evaluate":
+  case '/evaluate':
     self._resetAutoDestruct();
     self._evaluate(data.script, callback);
     break;
-  case "/evaluateOnGecko":
+  case '/evaluateOnGecko':
     self._resetAutoDestruct();
     self._evaluateOnGecko(data.script, callback);
     break;
-  case "/getConsoleLog":
+  case '/getConsoleLog':
     self._resetAutoDestruct();
     self._getConsoleLog(callback);
     break;
-  case "/getCookies":
+  case '/getCookies':
     self._resetAutoDestruct();
     self._getCookies(callback);
     break;
-  case "/waitForResources":
+  case '/waitForResources':
     self._resetAutoDestruct();
     self._waitForResources(data.timeout, callback);
     break;
-  case "/setScreenSize":
+  case '/setScreenSize':
     self._resetAutoDestruct();
     self._setScreenSize(data.size, callback);
     break;
   default:
-    console.log("WHAT DO YOU WANT?");
+    console.log('What did you want?');
     response.statusCode = 500;
-    response.write("");
+    response.write('');
     response.close();
     return;
   }

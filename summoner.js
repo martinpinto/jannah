@@ -1,5 +1,3 @@
-/*jslint node: true, indent: 2, maxlen: 100*/
-
 var acquire = require('acquire'),
   bodyParser = require('body-parser'),
   compression = require('compression'),
@@ -15,11 +13,11 @@ var acquire = require('acquire'),
   winston = require('winston'),
   os = require('os');
 
-var PHANTOM_COMMAND = "phantomjs",
-  SLIMER_COMMAND = "submodules/slimerjs/src/slimerjs";
+var PHANTOM_COMMAND = 'phantomjs',
+  SLIMER_COMMAND = 'submodules/slimerjs/src/slimerjs';
 
 if (os.platform().indexOf('win') === 0) {
-  SLIMER_COMMAND = "submodules\\slimerjs\\src\\slimerjs.bat";
+  SLIMER_COMMAND = 'submodules\\slimerjs\\src\\slimerjs.bat';
 }
 
 // TODO
@@ -31,7 +29,7 @@ var Summoner = module.exports = function(engine, ip, port, callback) {
 Summoner.prototype = new events.EventEmitter();
 
 Summoner.prototype.init = function(engine, ip, port, callback) {
-  console.log(ip + ":" + port);
+  console.log(ip + ':' + port);
   var self = this;
   self._summonVerified = false;
   self.id = port;
@@ -40,11 +38,11 @@ Summoner.prototype.init = function(engine, ip, port, callback) {
   self._callback = callback;
   self._tab = null;
   self._date = Date.create('today');
-  console.log("Summoning Tab");
+  console.log('Summoning Tab');
   if (engine === 'webkit')
-    self._tab = spawn(PHANTOM_COMMAND, ["tab.js", ip, port]);
+    self._tab = spawn(PHANTOM_COMMAND, ['tab.js', ip, port]);
   else
-    self._tab = spawn(SLIMER_COMMAND, ["tab.js", ip, port]);
+    self._tab = spawn(SLIMER_COMMAND, ['tab.js', ip, port]);
 
   self._noSpawnTimer = timers.setTimeout(function() {
     self._onNoSpawn();
@@ -59,7 +57,7 @@ Summoner.prototype.init = function(engine, ip, port, callback) {
 
 Summoner.prototype._kill = function() {
   var self = this;
-  console.log("killing tab on port " + self.id);
+  console.log('killing tab on port ' + self.id);
   self._tab.kill();
   self.emit('exit');
 };
@@ -67,7 +65,7 @@ Summoner.prototype._kill = function() {
 Summoner.prototype.release = function() {
   var self = this;
   self._callback({
-    url: "http://" + self._ip + ":" + this.id
+    url: 'http://' + self._ip + ':' + this.id
   });
   self._monitor();
 };
@@ -83,8 +81,8 @@ Summoner.prototype._onNoSpawn = function() {
 Summoner.prototype._monitor = function() {
   var self = this;
   timers.clearTimeout(self._noSpawnTimer);
-  console.log("Tab: " + self.id + " is alive.");
-  var uri = "http://" + self._ip + ":" + self.id + "/ping";
+  console.log('Tab: ' + self.id + ' is alive.');
+  var uri = 'http://' + self._ip + ':' + self.id + '/ping';
   console.log(uri);
   var request = http.get(uri, function() {
     self._monitor();
