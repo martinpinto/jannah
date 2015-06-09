@@ -56,21 +56,10 @@ Hub.prototype.init = function() {
 };
 
 Hub.prototype._setupLogger = function() {
-  if (this._debug === false) {
-    logger = new winston.Logger({
-      transports: [
-        new Papertrail({
-          host: 'logs.papertrailapp.com',
-          port: 38599
-        })
-      ]
-    });
-  } else {
-    logger = new(winston.Logger)({
+  logger = new(winston.Logger)({
       transports: [new winston.transports.Console()],
       exceptionHandlers: [new winston.transports.Console()]
     });
-  }
 };
 
 Hub.prototype._exit = function(err) {

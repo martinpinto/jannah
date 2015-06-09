@@ -40,7 +40,7 @@ Summoner.prototype.init = function (engine, ip, port, callback) {
   self._date = Date.create('today');
   console.log('Summoning Tab');
   var command = engine === 'webkit' ? PHANTOM_COMMAND : SLIMER_COMMAND;
-  self._tab = spawn(command, ['submodules/boar/tab.js', ip, port]);
+  self._tab = spawn(command, ['submodules/boar/tab.js', ip, port, config.HUB_PORT]);
 
   self._noSpawnTimer = timers.setTimeout(function () {
     self._onNoSpawn();
