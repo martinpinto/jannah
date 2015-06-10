@@ -1,3 +1,6 @@
 [submodule "submodules/slimerjs"]
 	path = submodules/slimerjs
 	url = https://github.com/laurentj/slimerjs.git
+[submodule "submodules/boar"]
+	path = submodules/boar
+	url = git@github.com:Asynchq/boar.git
