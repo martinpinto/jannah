@@ -3,8 +3,10 @@
   "version": "0.0.1",
   "description": "Headless web biatch",
   "dependencies": {
+    "URIjs": "x.x.x",
     "acquire": "git://github.com/njpatel/acquire.git",
     "body-parser": "*",
+    "commander": "^2.8.1",
     "compression": "*",
     "connect": "*",
     "enum": "0.2.x",
@@ -20,8 +22,7 @@
     "socket.io-client": "1.0.*",
     "sugar": "x.x.x",
     "underscore": "*",
-    "URIjs": "x.x.x",
-    "whatismyip" : "x",
+    "whatismyip": "x",
     "winston": "0.x.x",
     "winston-papertrail": "*"
   },
