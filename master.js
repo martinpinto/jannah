@@ -8,16 +8,16 @@ var acquire = require('acquire'),
   Papertrail = require('winston-papertrail').Papertrail,
   util = require('util'),
   sugar = require('sugar'),
-  winston = require('winston');
+  winston = require('winston'),
+  program = require('commander'),
+  pjson = acquire('package');
 
 var logger = null;
 
 
-var Master = function(argv, done) {
-  this._debug = false;
-
-  if (argv[2])
-    this._debug = argv[2] === 'debug';
+var Master = function() {
+  this._debug = program.debug;
+  program.version(pjson.version);
 
   this._hub = {};
   this._server = null;
@@ -177,7 +177,7 @@ Master.prototype._mostIdleHub = function(country, city, ignore) {
   var hub = Object.values(self._hub);
 
   hub = hub.filter(function(hub) {
-    if (!country) // we don't care about location here. 
+    if (!country) // we don't care about location here.
       return true;
 
     if (ignore.some(hub.ip))
@@ -223,23 +223,13 @@ function main() {
     process.exit(1);
   });
 
-  var done = function(err) {
-    if (err) {
-      console.warn(err);
-      console.trace();
-    }
-    process.exit(err ? 1 : 0);
-  };
-
   var args = process.argv;
 
-  if (args === 'help') {
-    logger.info('Usage: node master.js [options]\nOptions:\n');
-    logger.info('\tMaster state', '\tGets the state of Master.');
-    logger.info('\tMaster version', '\tGets the version of Master\n');
-    done();
-  } else
-    new Master(args, done);
+  program.version(pjson.version)
+    .option('-d, --debug', 'Runs in debug mode')
+    .parse(args);
+
+  new Master();
 }
 
 main();

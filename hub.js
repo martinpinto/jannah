@@ -14,7 +14,9 @@ var acquire = require('acquire'),
   utilities = acquire('utilities'),
   Summoner = acquire('summoner'),
   winston = require('winston'),
-  osm = require('os-monitor');
+  osm = require('os-monitor'),
+  program = require('commander'),
+  pjson = acquire('package');
 
 var logger = null;
 
@@ -169,7 +171,7 @@ Hub.prototype._new = function(data, callback) {
 
     self._tabs[port] = new Summoner(data.engine, ip, port, callback);
     self._tabs[port].on('exit', onExit);
-    // fire off a new update now that we have a new Tab 
+    // fire off a new update now that we have a new Tab
     self._sendUpdateToMaster();
   };
   utilities.getFreePort(self._reservedPorts, func);
@@ -210,21 +212,13 @@ function main() {
     process.exit(1);
   });
 
-  var done = function(err) {
-    if (err) {
-      console.warn(err);
-      console.trace();
-    }
-    process.exit(err ? 1 : 0);
-  };
-
   var args = process.argv;
 
-  if (args[2] && args[2] === 'help') {
-    logger.info('Usage: node hub.js [options]\nOptions: debug\nhelp\n');
-    done();
-  } else
-    new Hub(args);
+  program.version(pjson.version)
+    .option('-d, --debug', 'Runs in debug mode')
+    .parse(args);
+
+  new Hub(args);
 }
 
 main();
