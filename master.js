@@ -8,9 +8,9 @@ var acquire = require('acquire'),
   Papertrail = require('winston-papertrail').Papertrail,
   util = require('util'),
   sugar = require('sugar'),
-  winston = require('winston'),
   program = require('commander'),
-  pjson = acquire('package');
+  pjson = acquire('package'),
+  Logger = acquire('logger');
 
 var logger = null;
 
@@ -27,7 +27,7 @@ var Master = function() {
 
 Master.prototype.init = function() {
   var self = this;
-  self._setupLogger();
+  logger = new Logger(self.debug);
   self._backChannel = new io();
   self._backChannel.on('connection', self._onConnect.bind(self));
   self._backChannel.listen(config.MASTER_BACK_CHANNEL_PORT);
@@ -42,24 +42,6 @@ Master.prototype.init = function() {
   });
   app.listen(config.MASTER_PORT);
   logger.info('Master started');
-};
-
-Master.prototype._setupLogger = function() {
-  if (this._debug === false) {
-    logger = new winston.Logger({
-      transports: [
-        new Papertrail({
-          host: 'logs.papertrailapp.com',
-          port: 38599
-        })
-      ]
-    });
-  } else {
-    logger = new(winston.Logger)({
-      transports: [new winston.transports.Console()],
-      exceptionHandlers: [new winston.transports.Console()]
-    });
-  }
 };
 
 Master.prototype._handleRequest = function(req, res) {
