@@ -10,8 +10,10 @@ var acquire = require('acquire'),
   sugar = require('sugar'),
   timers = require('timers'),
   utilities = acquire('utilities'),
-  winston = require('winston'),
-  os = require('os');
+  os = require('os'),
+  Logger = acquire('logger');
+
+var logger = null;
 
 var PHANTOM_COMMAND = 'phantomjs',
   SLIMER_COMMAND = 'submodules/slimerjs/src/slimerjs';
@@ -29,7 +31,8 @@ var Summoner = module.exports = function (engine, ip, port, callback) {
 Summoner.prototype = new events.EventEmitter();
 
 Summoner.prototype.init = function (engine, ip, port, callback) {
-  console.log(ip + ':' + port);
+  logger = new Logger(false);
+  logger.info(ip + ':' + port);
   var self = this;
   self._summonVerified = false;
   self.id = port;
@@ -38,7 +41,7 @@ Summoner.prototype.init = function (engine, ip, port, callback) {
   self._callback = callback;
   self._tab = null;
   self._date = Date.create('today');
-  console.log('Summoning Tab');
+  logger.info('Summoning Tab');
   var command = engine === 'webkit' ? PHANTOM_COMMAND : SLIMER_COMMAND;
   self._tab = spawn(command, ['submodules/boar/tab.js', ip, port, config.HUB_PORT]);
 
@@ -46,16 +49,16 @@ Summoner.prototype.init = function (engine, ip, port, callback) {
     self._onNoSpawn();
   }, 10000);
   self._tab.stdout.on('data', function (data) {
-    console.log('stdout: ' + data);
+    logger.info('stdout: ' + data);
   });
   self._tab.stderr.on('data', function (data) {
-    console.log('stderr: ' + data);
+    logger.info('stderr: ' + data);
   });
 };
 
 Summoner.prototype._kill = function () {
   var self = this;
-  console.log('killing tab on port ' + self.id);
+  logger.info('killing tab on port ' + self.id);
   self._tab.kill();
   self.emit('exit');
 };
@@ -79,9 +82,9 @@ Summoner.prototype._onNoSpawn = function () {
 Summoner.prototype._monitor = function () {
   var self = this;
   timers.clearTimeout(self._noSpawnTimer);
-  console.log('Tab: ' + self.id + ' is alive.');
+  logger.info('Tab: ' + self.id + ' is alive.');
   var uri = 'http://' + self._ip + ':' + self.id + '/ping';
-  console.log(uri);
+  logger.info(uri);
   var request = http.get(uri, function () {
       self._monitor();
     })

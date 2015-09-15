@@ -13,21 +13,16 @@ var acquire = require('acquire'),
   timers = require('timers'),
   utilities = acquire('utilities'),
   Summoner = acquire('summoner'),
-  winston = require('winston'),
   osm = require('os-monitor'),
   program = require('commander'),
-  pjson = acquire('package');
+  pjson = acquire('package'),
+  Logger = acquire('logger');
 
 var logger = null;
 
 var Hub = module.exports = function(args) {
   this._tabs = {};
-  this._debug = false;
-
-  if (args[2]) {
-    this._debug = args[2] === 'debug';
-  }
-
+  this._debug = program.debug;
   this._backChannel = null;
   this._health = {};
   this._ip = '';
@@ -41,7 +36,7 @@ Hub.prototype.init = function() {
   var self = this;
 
   var app = express();
-  self._setupLogger();
+  logger = new Logger(self._debug);
   app.use(compression());
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({
@@ -55,13 +50,6 @@ Hub.prototype.init = function() {
   self._openBackChannel(function(err) {
     if (err) logger.info(err);
   });
-};
-
-Hub.prototype._setupLogger = function() {
-  logger = new(winston.Logger)({
-      transports: [new winston.transports.Console()],
-      exceptionHandlers: [new winston.transports.Console()]
-    });
 };
 
 Hub.prototype._exit = function(err) {
