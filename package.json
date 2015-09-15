@@ -21,6 +21,7 @@
     "socket.io": "1.0.*",
     "socket.io-client": "1.0.*",
     "sugar": "x.x.x",
+    "toml-require": "^1.0.1",
     "underscore": "*",
     "whatismyip": "x",
     "winston": "0.x.x",

@@ -1,0 +1,16 @@
+# Main configuration file for Jannah
+
+default_ip = "127.0.0.1"
+
+[master]
+port = 7331
+address = "127.0.0.1"
+back_channel_port = 3000
+
+[hub]
+port = 8421
+config_path = "./hubConfig.json"
+
+[tab]
+start_port = 55550
+port_count = 5
