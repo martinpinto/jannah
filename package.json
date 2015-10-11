@@ -19,14 +19,14 @@
     "underscore": "*",
     "whatismyip": "x",
     "winston": "0.x.x",
-    "winston-papertrail": "*",
+    "winston-papertrail": "*"
   },
   "engines": {
     "node": "0.12.7"
   },
   "scripts": {
-    "start-master": "node --harmony lib/master/main.js",
-    "start-hub": "node --harmony lib/hub/main.js",
+    "master": "node --harmony lib/master/main.js",
+    "hub": "node --harmony lib/hub/main.js",
     "test": "node --harmony `which gulp` test"
   },
   "devDependencies": {
