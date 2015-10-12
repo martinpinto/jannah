@@ -39,6 +39,7 @@
     "lab": "^5.15.1",
     "mocha": "^2.3.3",
     "mocha-junit-reporter": "^1.6.1",
+    "mockery": "^1.4.0",
     "nock": "^2.10.0",
     "should": "^7.1.0",
     "simple-mock": "^0.3.1",
