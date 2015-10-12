@@ -127,4 +127,15 @@ describe('hubRegistry', function() {
       should.strictEqual(registry.find('sfo1'), null);
     });
   });
+
+  describe('asArray', function() {
+    it('should return array with all the hubs', function() {
+      registry.asArray().should.be.eql([{
+        location   : 'ams1',
+        maxTabs    : 5,
+        activeTabs : 2,
+        ip         : '127.0.0.1'
+      }]);
+    });
+  });
 });
