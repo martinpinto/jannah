@@ -25,7 +25,7 @@
                             // "double" : require double quotes
 "undef" : true, // true: Require all non-global variables to be declared (prevents global leaks)
 "unused" : false, // true: Require all defined variables be used
-"strict" : false, // true: Requires all functions run in ES5 Strict Mode
+"strict" : true, // true: Requires all functions run in ES5 Strict Mode
 "trailing" : false, // true: Prohibit trailing whitespaces
 "maxparams" : false, // {int} Max number of formal params allowed per function
 "maxdepth" : false, // {int} Max depth of nested blocks (within functions)
@@ -82,5 +82,20 @@
 "white" : false, // true: Check against strict whitespace and indentation rules
 
 // Custom Globals
-"globals" : [ "$", "io", "moment", "angular", "it", "describe", "socket", "_", "toastr", "require"] // additional predefined global variables
+"globals" : { // additional predefined global variables, true -read/write, false only read
+  "$"          : true,
+  "io"         : true,
+  "moment"     : true,
+  "angular"    : true,
+  "it"         : false,
+  "describe"   : false,
+  "beforeEach" : false,
+  "afterEach"  : false,
+  "after"      : false,
+  "before"     : false,
+  "socket"     : true,
+  "_"          : true,
+  "toastr"     : true,
+  "require"    : true
+}
 }
