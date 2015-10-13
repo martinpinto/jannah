@@ -59,7 +59,7 @@ describe('restServer', () => {
         mockResponse = new MockRes();
         nock('http://8.8.8.8:666')
           .log(console.log)
-          .post('/new', {
+          .post('/tab', {
             engine  : 'webkit',
             adblock : true
           })
