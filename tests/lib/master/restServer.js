@@ -25,7 +25,8 @@ describe('restServer', () => {
     restServer = new RestServer(hubRegistry);
     mockRequest = httpMocks.createRequest({
       body : {
-        engine : 'webkit'
+        engine  : 'webkit',
+        adblock : true
       }
     });
     mockResponse = new httpMocks.createResponse();
@@ -52,18 +53,6 @@ describe('restServer', () => {
       });
     });
 
-    it('should be calling next with an invalid argument error if engine is provided' +
-      'but it isnt one of the supported', done => {
-        mockRequest._setBody({
-          engine : 'trolololo'
-        });
-
-        restServer._postSessions(mockRequest, mockResponse, error => {
-          error.should.be.an.instanceof(restify.InvalidArgumentError);
-          done();
-        });
-    });
-
     it('should make request to hub to create new session, response from hub should be' +
       'sent to requester', done => {
         //request is piping its response node-mocks-http don't support streams out of box
@@ -71,7 +60,8 @@ describe('restServer', () => {
         nock('http://8.8.8.8:666')
           .log(console.log)
           .post('/new', {
-            engine : 'webkit'
+            engine  : 'webkit',
+            adblock : true
           })
           .reply(200, {
             url : '8.8.8.8:8888'
