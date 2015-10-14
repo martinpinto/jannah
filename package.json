@@ -9,6 +9,7 @@
     "dotenv": "^1.2.0",
     "gulp": "^3.9.0",
     "os-monitor": "*",
+    "phantomjs": "^1.9.18",
     "portscanner": "*",
     "request": "^2.65.0",
     "restify": "^4.0.3",
@@ -29,8 +30,8 @@
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha --harmony --recursive tests"
   },
-  "bin" : {
-    "jannah" : "bin/jannah"
+  "bin": {
+    "jannah": "bin/jannah"
   },
   "devDependencies": {
     "chai": "^3.2.0",
