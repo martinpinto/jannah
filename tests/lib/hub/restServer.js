@@ -21,7 +21,7 @@ describe('restServer', () => {
   });
 
   beforeEach(() => {
-    tabList = new TabList();
+    tabList = new TabList([55500, 55555]);
     restServer = new RestServer('127.0.0.1', tabList);
     restServer._port = 9999;
     mockRequest = httpMocks.createRequest();

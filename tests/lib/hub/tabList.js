@@ -8,7 +8,7 @@ describe('tabList', () => {
   let tabList, tabMock;
 
   beforeEach(function() {
-    tabList = new TabList();
+    tabList = new TabList([55500, 55555]);
     tabMock = new EventEmitter();
     tabMock.release = function(){};
 
@@ -25,7 +25,7 @@ describe('tabList', () => {
 
   describe('add', () => {
     beforeEach(() => {
-      tabList = new TabList();
+      tabList = new TabList([55500, 55555]);
     });
 
     it('should add tab with its port to internal lists', () => {

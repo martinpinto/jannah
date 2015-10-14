@@ -20,7 +20,7 @@ describe('backchannel', () => {
   });
 
   beforeEach(function() {
-    tabList = new TabList();
+    tabList = new TabList([55500, 55555]);
 
     backchannel = new Backchannel('http://127.0.0.1:666', {
       location : 'ams1',
