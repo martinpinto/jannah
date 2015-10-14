@@ -5,24 +5,24 @@ import time
 
 
 def do_command(url, command, data={}):
-    print "executing %s/%s" % (url, command),
+    print "executing %s/%s\n" % (url, command),
+
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
     response = requests.post('%s/%s' % (url, command),
                              data=json.dumps(data), headers=headers)
+
     print response.status_code
     print response.text.encode('utf-8').strip()
+
     if response.status_code == 500:
         do_command(url, "destroy")
         sys.exit(1)
 
     return response
 
-  
-  
-# Get a tab from the Great Britain
 
-data = {"engine": "webkit"}
-response = do_command("http://127.0.0.1:7331", "new", data)
+data = {"engine": "gecko", "adblock" : True}
+response = do_command("http://127.0.0.1:7331", "sessions", data)
 
 
 # The tab url from the previous request, all upcomin requests will be sent to that url
@@ -57,7 +57,7 @@ data = {'timeout': 60000}
 response = do_command(url, "waitForResources", data)
 
 
-# Get Resources 
+# Get Resources
 response = do_command(url, "getResources")
 resources = json.loads(response.text)["resources"]
 keys = sorted(resources.keys(), key=lambda x: int(x))
