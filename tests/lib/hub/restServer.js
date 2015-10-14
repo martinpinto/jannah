@@ -125,7 +125,7 @@ describe('restServer', () => {
         done();
       };
       mockRequest._setBody({
-        port : 666
+        port : '666'
       });
 
       restServer._postAnnounceTab(mockRequest, mockResponse);
