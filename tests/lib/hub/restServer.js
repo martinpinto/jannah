@@ -23,10 +23,11 @@ describe('restServer', () => {
   beforeEach(() => {
     tabList = new TabList();
     restServer = new RestServer('127.0.0.1', tabList);
+    restServer._port = 9999;
     mockRequest = httpMocks.createRequest();
     mockResponse = httpMocks.createResponse();
 
-    SummonerMock = (engine, ip, port, callback) => {
+    SummonerMock = (engine, ip, port, restPort, callback) => {
       this.release = () => {
         callback({
           url : 'http://' + ip + ':' + port
@@ -92,10 +93,11 @@ describe('restServer', () => {
     });
 
     it('should create summoner with selected port and engine', (done) => {
-      mockery.registerMock('./summoner', (engine, serverIp, port, callback) => {
+      mockery.registerMock('./summoner', (engine, serverIp, port, restPort, callback) => {
         engine.should.be.equal('gecko');
         serverIp.should.be.equal('127.0.0.1');
         port.should.be.equal(666);
+        restPort.should.be.equal(9999);
         callback.should.be.a.Function();
         done();
 
