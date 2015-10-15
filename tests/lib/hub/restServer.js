@@ -29,7 +29,7 @@ describe('restServer', () => {
 
     SummonerMock = (engine, ip, port, restPort, callback) => {
       this.release = () => {
-        callback({
+        callback(null, {
           url : 'http://' + ip + ':' + port
         });
       };
@@ -101,19 +101,31 @@ describe('restServer', () => {
         callback.should.be.a.Function();
         done();
 
-        this.on = function(){};
+        this.on = ()=>{};
       });
 
       restServer._postTab(mockRequest, mockResponse);
     });
 
-    it('should send back ip address once tab gets released', function() {
+    it('should send back ip address once tab gets released', () => {
       mockery.registerMock('./summoner', SummonerMock);
       restServer._postTab(mockRequest, mockResponse);
       tabList.release(666);
 
       mockResponse._getData().should.be.eql({
         url : 'http://127.0.0.1:666'
+      });
+    });
+
+    it('should call next with service unavailable error if tab spawn fails', (done) => {
+      mockery.registerMock('./summoner', (engine, serverIp, port, restPort, callback) => {
+        callback(new Error('test error'));
+        this.on = ()=>{};
+      });
+
+      restServer._postTab(mockRequest, mockResponse, (error) => {
+        error.should.be.an.instanceof(restify.ServiceUnavailableError);
+        done();
       });
     });
   });
