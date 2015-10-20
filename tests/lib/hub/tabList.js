@@ -1,6 +1,7 @@
 "use strict";
 
 let TabList = require('../../../lib/hub/tabList'),
+  async = require('async'),
   should = require('should'),
   EventEmitter = require('events').EventEmitter;
 
@@ -21,6 +22,29 @@ describe('tabList', () => {
 
   it('should be an event emitter', () => {
     tabList.should.be.an.instanceof(EventEmitter);
+  });
+
+  describe('getPort', () => {
+    it('should return different ports for different calls', (done) => {
+      async.parallel({
+        port1 : (cb) => {
+          tabList.getPort((port) => {
+            tabList.add(port, new EventEmitter());
+            cb(null, port);
+          });
+        },
+        port2 : (cb) => {
+          tabList.getPort((port) => {
+            tabList.add(port, new EventEmitter());
+            cb(null, port);
+          });
+        }
+      }, (error, results) => {
+        should.not.exist(error);
+        results.port1.should.not.be.equal(results.port2);
+        done();
+      });
+    });
   });
 
   describe('add', () => {
