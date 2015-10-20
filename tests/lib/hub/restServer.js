@@ -8,7 +8,7 @@ let RestServer = require('../../../lib/hub/restServer'),
   mockery = require('mockery');
 
 describe('restServer', () => {
-  let restServer, mockRequest, mockResponse, tabList, SummonerMock;
+  let restServer, mockRequest, mockResponse, tabList, BoarMock;
 
   before(() => {
     mockery.enable({
@@ -27,14 +27,16 @@ describe('restServer', () => {
     mockRequest = httpMocks.createRequest();
     mockResponse = httpMocks.createResponse();
 
-    SummonerMock = (engine, ip, port, restPort, callback) => {
-      this.release = () => {
-        callback(null, {
-          url : 'http://' + ip + ':' + port
-        });
-      };
+    BoarMock = {
+      Summoner : (engine, ip, port, restPort, callback) => {
+        this.release = () => {
+          callback(null, {
+            url : 'http://' + ip + ':' + port
+          });
+        };
 
-      this.on = () => {};
+        this.on = () => {};
+      }
     };
   });
 
@@ -93,22 +95,24 @@ describe('restServer', () => {
     });
 
     it('should create summoner with selected port and engine', (done) => {
-      mockery.registerMock('./summoner', (engine, serverIp, port, restPort, callback) => {
-        engine.should.be.equal('gecko');
-        serverIp.should.be.equal('127.0.0.1');
-        port.should.be.equal(666);
-        restPort.should.be.equal(9999);
-        callback.should.be.a.Function();
-        done();
+      mockery.registerMock('boar', {
+        Summoner : (engine, serverIp, port, restPort, callback) => {
+          engine.should.be.equal('gecko');
+          serverIp.should.be.equal('127.0.0.1');
+          port.should.be.equal(666);
+          restPort.should.be.equal(9999);
+          callback.should.be.a.Function();
+          done();
 
-        this.on = ()=>{};
+          this.on = ()=>{};
+        }
       });
 
       restServer._postTab(mockRequest, mockResponse);
     });
 
     it('should send back ip address once tab gets released', () => {
-      mockery.registerMock('./summoner', SummonerMock);
+      mockery.registerMock('boar', BoarMock);
       restServer._postTab(mockRequest, mockResponse);
       tabList.release(666);
 
@@ -118,9 +122,11 @@ describe('restServer', () => {
     });
 
     it('should call next with service unavailable error if tab spawn fails', (done) => {
-      mockery.registerMock('./summoner', (engine, serverIp, port, restPort, callback) => {
-        callback(new Error('test error'));
-        this.on = ()=>{};
+      mockery.registerMock('boar', {
+        Summoner : (engine, serverIp, port, restPort, callback) => {
+          callback(new Error('test error'));
+          this.on = ()=>{};
+        }
       });
 
       restServer._postTab(mockRequest, mockResponse, (error) => {
