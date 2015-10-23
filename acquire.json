@@ -1,7 +1,0 @@
-{
-  "config": "config.js",
-  "utilities": "utilities.js",
-  "summoner": "summoner.js",
-  "package": "package.json",
-  "logger": "logger.js"
-}

@@ -1,0 +1,129 @@
+#!/bin/sh
+":" //# comment; exec /usr/bin/env node --harmony "$0" "$@"
+
+//https://github.com/nodejs/node-v0.x-archive/pull/7007 there is no other way
+//how to pass harmony flag
+
+"use strict";
+
+let argv = require('yargs')
+  .wrap(require('yargs').terminalWidth())
+  .usage('Usage: $0 <command> [options]')
+
+  .command('master', 'Run as master', (yargs) => {
+    let argv = yargs
+      .wrap(yargs.terminalWidth())
+
+      .boolean('d')
+      .alias('d', 'debug')
+      .default('d', false)
+      .describe('d', 'Log to the console')
+
+      .demand('p')
+      .alias('p', 'restPort')
+      .default('p', 7331)
+      .describe('p', 'Rest server port')
+
+      .demand('b')
+      .default('b', 3000)
+      .alias('b', 'backchannel')
+      .describe('b', 'Backchannel port')
+
+      .help('h')
+      .alias('h', 'help')
+
+      .argv;
+
+    startMaster(argv);
+  })
+
+  .command('hub', 'Run as hub', (yargs) => {
+    let argv = yargs
+      .wrap(yargs.terminalWidth())
+
+      .boolean('d')
+      .alias('d', 'debug')
+      .default('d', false)
+      .describe('d', 'Log to the console')
+
+      .demand('p')
+      .default('p', 8421)
+      .alias('p', 'restPort')
+      .describe('p', 'Rest server port')
+
+      .demand('t')
+      .default('t', 5)
+      .alias('t', 'maxTabs')
+      .describe('t', 'Max tabs hub can have')
+
+      .demand('l')
+      .alias('l', 'location')
+      .describe('l', 'Location string where server is location')
+
+      .array('tabPorts')
+      .default('tabPorts', [55550, 55650])
+      .describe('tabPorts', 'Range of port numbers that can be used for tabs --tabPorts {start} {end}')
+      .check((argv) => {
+        if(argv.tabPorts.length !== 2) {
+          throw new Error('You must provide 2 values for tabPorts range')
+        }
+
+        return true
+      })
+
+      .demand('b')
+      .alias('b', 'backchannel')
+      .describe('b', 'Backchannel server location(ip:port)')
+
+      .demand('publicIp')
+      .default('publicIp', null)
+      .describe('publicIp', 'Ip address sent to master, by default will be public ip')
+
+      .help('h')
+      .alias('h', 'help')
+
+      .argv;
+
+      startHub(argv);
+  })
+  .demand(1)
+
+  .version(() => {
+    return require('../package').version;
+  })
+
+  .help('h')
+  .alias('h', 'help')
+
+  .argv,
+  logger = new (require('../lib/common/logger'))(argv.debug);
+
+function startMaster(argv) {
+  global.DEBUG = argv.debug;
+
+  require('../lib/master/main')(argv);
+}
+
+function startHub(argv) {
+  global.DEBUG = argv.debug;
+
+  if(argv.publicIp === null) {
+    require('../lib/common/utilities').getNetworkIP((error, ip) => {
+      if(error) {
+        logger.error('Public ip acquire error', {
+          error : error.message
+        });
+
+        throw new Error('Failed to acquire public ip address');
+      }
+      logger.info('Acquired public ip', {
+        ip : ip.ip
+      });
+
+      argv.publicIp = ip.ip;
+      require('../lib/hub/main')(argv);
+    });
+  } else {
+    require('../lib/hub/main')(argv);
+  }
+}
