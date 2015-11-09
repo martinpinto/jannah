@@ -11,7 +11,7 @@ var async = require('async'),
   gulpSSHHub = new (require('gulp-ssh'))({
     sshConfig : {
       host : process.env.HUB_HOST,
-      username : 'root',
+      username : process.env.SSH_USERNAME,
       privateKey : fs.readFileSync(process.env.SSH_KEY),
       passphrase : process.env.SSH_PASSWORD
     }
@@ -19,14 +19,14 @@ var async = require('async'),
   gulpSSHMaster = new (require('gulp-ssh'))({
     sshConfig : {
       host : process.env.MASTER_HOST,
-      username : 'root',
+      username : process.env.SSH_USERNAME,
       privateKey : fs.readFileSync(process.env.SSH_KEY),
       passphrase : process.env.SSH_PASSWORD
     }
   }),
   sftpSettings = [{
     host : process.env.MASTER_HOST,
-    user : 'root',
+    user : process.env.SSH_USERNAME,
     key : {
       location : process.env.SSH_KEY,
       passphrase : process.env.SSH_PASSWORD,
@@ -34,14 +34,13 @@ var async = require('async'),
     remotePath : '/opt/jannah'
   }, {
     host : process.env.HUB_HOST,
-    user : 'root',
+    user : process.env.SSH_USERNAME,
     key : {
       location : process.env.SSH_KEY,
       passphrase : process.env.SSH_PASSWORD,
     },
     remotePath : '/opt/jannah'
-  }],
-  gulpSCP = require('gulp-scp2');
+  }];
 
 //There should be better way than copy-paste, could use async but
 //gulp acts weird with callbacks and streams
@@ -67,7 +66,7 @@ gulp.task('uploadHub', function(cb) {
      '!./.DS_Store',
      '!./.env',
      '!./.gitignore'],{ dot : true })
-  .pipe(sftp(sftpSettings[0]));
+  .pipe(sftp(sftpSettings[1]));
 });
 
 gulp.task('restartMaster', ['uploadMaster'], function() {
