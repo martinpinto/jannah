@@ -23,7 +23,7 @@
     "underscore": "*",
     "whatismyip": "x",
     "winston": "0.x.x",
-    "winston-papertrail": "*",
+    "winston-papertrail": "^1.0.1",
     "yargs": "^3.27.0"
   },
   "engines": {
